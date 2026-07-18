@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayit Ol - PUBG Turnuvasy</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container main-content">
+        <header class="form-header">
+            <a href="/" class="back-btn">← Yza</a>
+            <h1>KAYIT OL</h1>
+            <p>PUBG Turnuvasy-na gatnasymak ucin maglumatlarynyzy dolduryn</p>
+        </header>
+
+        <form id="kayit-form" class="registration-form" novalidate>
+            <div class="form-group">
+                <label for="ad">Adynyz</label>
+                <input type="text" id="ad" name="ad" placeholder="Adynyz we Familiyanyz" required minlength="2" maxlength="100" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label for="pubg_id">PUBG ID</label>
+                <input type="text" id="pubg_id" name="pubg_id" placeholder="Oyun icindeki ID-niz" required maxlength="20" pattern="[0-9]+" autocomplete="off">
+                <small class="form-hint">PUBG oyunynyn icindeki ID-niz</small>
+            </div>
+
+            <div class="form-group">
+                <label for="telefon">Telefon Belgiz</label>
+                <input type="tel" id="telefon" name="telefon" placeholder="+993 61 234 567" required maxlength="20" autocomplete="tel">
+                <small class="form-hint">TMCell belgiz (toleg ucin gerekli)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="ulasim">Ulasymak Ucin</label>
+                <input type="text" id="ulasim" name="ulasim" placeholder="@username yada IMO belgi" required maxlength="100" autocomplete="off">
+            </div>
+
+            <div class="form-info-box">
+                <h4>Maglumat</h4>
+                <ul>
+                    <li>Gatnasik tolegi: <strong>5 Manat</strong></li>
+                    <li>Toleg usuly: <strong>TMCell SMS (0804)</strong></li>
+                    <li>Kayd bolanynyzdan son referans kody alarsynyz</li>
+                </ul>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submit-btn">
+                <span class="btn-text">KAYIT OL</span>
+                <span class="btn-loader" style="display:none;">⏳</span>
+            </button>
+        </form>
+
+        <div class="modal" id="success-modal" role="dialog">
+            <div class="modal-content success-modal">
+                <div class="success-icon">🎉</div>
+                <h2>Ustunlikli!</h2>
+                <p>Siz ustunlikli hasaba alyndynyz!</p>
+                <div class="ref-code-box">
+                    <span class="ref-label">Sizin Referans Kodynyz:</span>
+                    <div class="ref-code" id="ref-code-display">PUBG-XXXXXX</div>
+                    <button class="btn-copy" onclick="copyRefCode()" type="button">Nusga Al</button>
+                </div>
+                <div class="next-steps">
+                    <p>Indiki adim: Toleg etmek</p>
+                    <a href="#" id="odeme-link" class="btn-primary">TOLEGE GIT</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let csrfToken = '';
+
+        async function getCsrfToken() {
+            try {
+                const response = await fetch('/api/csrf-token');
+                const result = await response.json();
+                if (result.success) csrfToken = result.csrf_token;
+            } catch (error) {
+                console.error('CSRF token almakda yalnyslyk:', error);
+            }
+        }
+
+        getCsrfToken();
+
+        function validateForm() {
+            const ad = document.getElementById('ad').value.trim();
+            const pubg_id = document.getElementById('pubg_id').value.trim();
+            const telefon = document.getElementById('telefon').value.trim();
+
+            if (ad.length < 2) {
+                alert('Ad 2 harpdan uly bolmaly!');
+                return false;
+            }
+            if (!/^\d+$/.test(pubg_id)) {
+                alert('PUBG ID dine sanlardan ybarat bolmaly!');
+                return false;
+            }
+            const telClean = telefon.replace(/\s/g, '').replace(/-/g, '').replace(/\+/g, '');
+            if (!/^\d{8}$/.test(telClean) && !/^993\d{8}$/.test(telClean) && !/^993\d{9}$/.test(telClean)) {
+                alert('Telefon belgisi nadogry! Format: +993 XX XXX XXX ýa-da 8 san');
+                return false;
+            }
+            return true;
+        }
+
+        document.getElementById('kayit-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+            if (!csrfToken) {
+                alert('CSRF token tapylmady. Sahypany tezeleyn.');
+                await getCsrfToken();
+                if (!csrfToken) return;
+            }
+
+            const btn = document.getElementById('submit-btn');
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoader = btn.querySelector('.btn-loader');
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'inline';
+            btn.disabled = true;
+
+            const data = {
+                ad: document.getElementById('ad').value.trim(),
+                pubg_id: document.getElementById('pubg_id').value.trim(),
+                telefon: document.getElementById('telefon').value.trim(),
+                ulasim: document.getElementById('ulasim').value.trim(),
+                csrf_token: csrfToken
+            };
+
+            try {
+                const response = await fetch('/api/kayit-ol', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Server yalnyslygy: ' + response.status);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    localStorage.setItem('pubg_ref_code', result.referans_kodu);
+                    document.getElementById('ref-code-display').textContent = result.referans_kodu;
+                    document.getElementById('odeme-link').href = '/odeme/' + encodeURIComponent(result.referans_kodu);
+                    document.getElementById('success-modal').style.display = 'flex';
+                } else {
+                    alert(result.message || 'Yalnyslyk yuze cykdy');
+                    await getCsrfToken();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Yalnyslyk yuze cykdy: ' + error.message);
+                await getCsrfToken();
+            } finally {
+                btnText.style.display = 'inline';
+                btnLoader.style.display = 'none';
+                btn.disabled = false;
+            }
+        });
+
+        function copyRefCode() {
+            const code = document.getElementById('ref-code-display').textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('Referans kody nusga alyndy!');
+                }).catch(() => {
+                    fallbackCopy(code);
+                });
+            } else {
+                fallbackCopy(code);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('Referans kody nusga alyndy!');
+            } catch (err) {
+                alert('Nusga alyp bolmady: ' + text);
+            }
+            document.body.removeChild(textarea);
+        }
+    </script>
+</body>
+</html>

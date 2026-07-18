@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Panel - PUBG Turnuvasy</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    <div class="container main-content">
+        <header class="admin-header">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>Admin Panel</h1>
+                <a href="/admin/logout" style="color:#ff2d55; text-decoration:none; font-size:13px;">Cykys</a>
+            </div>
+            <div class="admin-stats">
+                <div class="stat-box"><span>Toplam</span><strong>{{ stats.toplam }}</strong></div>
+                <div class="stat-box"><span>Toleg Eden</span><strong>{{ stats.odeme_yapan }}</strong></div>
+                <div class="stat-box"><span>Onaylanan</span><strong>{{ stats.onaylanan }}</strong></div>
+            </div>
+        </header>
+
+        <!-- 3 ÇYZYKLY KATEGORIÝA -->
+        <div class="admin-tabs">
+            <button class="admin-tab-btn active" onclick="showAdminTab('turnir', this)" type="button">📅 Turnir Maglumatlary</button>
+            <button class="admin-tab-btn" onclick="showAdminTab('katilimci', this)" type="button">👥 Katylymcylar</button>
+            <button class="admin-tab-btn" onclick="showAdminTab('topar', this)" type="button">🏆 Toparlar</button>
+        </div>
+
+        <!-- TAB 1: TURNIR MAGLUMATLARY -->
+        <div id="tab-turnir" class="admin-tab-content active">
+            <section class="admin-section">
+                <h2>Turnir Maglumatlary</h2>
+                <div class="ayar-form">
+                    <div class="ayar-group"><label>Senesi</label><input type="text" id="ayar-senesi" value="{{ turnir.senesi }}"></div>
+                    <div class="ayar-group"><label>Wagty</label><input type="text" id="ayar-wagty" value="{{ turnir.wagty }}"></div>
+                    <div class="ayar-group"><label>Karta</label><input type="text" id="ayar-karta" value="{{ turnir.karta }}"></div>
+                    <div class="ayar-group"><label>Gatnasik</label><input type="text" id="ayar-gatnasym" value="{{ turnir.gatnasym }}"></div>
+                    <div class="ayar-group"><label>Toleg</label><input type="text" id="ayar-tolek" value="{{ turnir.tolek }}"></div>
+                    <div class="ayar-group"><label>Toleg Usuly</label><input type="text" id="ayar-tolek-usuly" value="{{ turnir.tolek_usuly }}"></div>
+                    <div class="ayar-group"><label>Yer Sany</label><input type="number" id="ayar-yer-sany" value="{{ stats.yer_sany }}" min="1" max="10000"></div>
+                    <button class="btn-submit" onclick="saveAyarlar()" type="button" style="margin-top:10px;">Maglumatlary Sakla</button>
+                </div>
+            </section>
+
+            <section class="admin-section">
+                <h2>Bayraklar</h2>
+                <div class="ayar-form">
+                    <div class="ayar-group"><label>1-nji Orun</label><input type="text" id="ayar-b1" value="{{ bayraklar.bir.mukdar }}"></div>
+                    <div class="ayar-group"><label>1-nji Orun Bonus</label><input type="text" id="ayar-b1-bonus" value="{{ bayraklar.bir.bonus }}"></div>
+                    <div class="ayar-group"><label>2-nji Orun</label><input type="text" id="ayar-b2" value="{{ bayraklar.iki.mukdar }}"></div>
+                    <div class="ayar-group"><label>3-nji Orun</label><input type="text" id="ayar-b3" value="{{ bayraklar.uc.mukdar }}"></div>
+                    <div class="ayar-group"><label>Jemi Bayrak</label><input type="text" id="ayar-bjemi" value="{{ bayraklar.jemi }}"></div>
+                    <button class="btn-submit" onclick="saveBayraklar()" type="button" style="margin-top:10px;">Bayraklary Sakla</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: KATYLYMCYLAR -->
+        <div id="tab-katilimci" class="admin-tab-content">
+            <section class="admin-section">
+                <h2>Katylymcylar ({{ katilimcilar|length }})</h2>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead><tr><th>Ref. Kod</th><th>Ad</th><th>PUBG ID</th><th>Telefon</th><th>Toleg</th><th>Onay</th><th>Islem</th></tr></thead>
+                        <tbody>
+                            {% for k in katilimcilar %}
+                            <tr>
+                                <td><code>{{ k['referans_kodu'] }}</code></td>
+                                <td>{{ k['ad'] }}</td>
+                                <td>{{ k['pubg_id'] }}</td>
+                                <td>{{ k['telefon'] }}</td>
+                                <td>{% if k['odeme_durumu'] == 1 %}✅{% else %}❌{% endif %}</td>
+                                <td>
+                                    {% if k['admin_onay'] == 0 %}Garasyl yar
+                                    {% elif k['admin_onay'] == 1 %}Tassyklandy
+                                    {% else %}Ret edildi{% endif %}
+                                </td>
+                                <td>
+                                    {% if k['odeme_durumu'] == 1 and k['admin_onay'] == 0 %}
+                                    <button onclick="onayla('{{ k['referans_kodu'] }}')" class="btn-approve" type="button">Onayla</button>
+                                    <button onclick="reddet('{{ k['referans_kodu'] }}')" class="btn-reject" type="button">Reddet</button>
+                                    {% endif %}
+                                    <button onclick="poz('{{ k['referans_kodu'] }}')" class="btn-delete" type="button">Poz</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 3: TOPARLAR -->
+        <div id="tab-topar" class="admin-tab-content">
+            <section class="admin-section">
+                <h2>Toparlar ({{ takimlar|length }})</h2>
+                <div class="teams-grid">
+                    {% for t in takimlar %}
+                    <div class="team-admin-card">
+                        <h4>{{ t['takim_adi'] or 'Topar' }}</h4>
+                        <p>Kod: <code>{{ t['takim_kodu'] }}</code></p>
+                        <p>Lider: {{ t['lider_ady'] }}</p>
+                        <p>Agzalar: 
+                            {% if t['uye1_referans'] %}1{% else %}0{% endif %}+
+                            {% if t['uye2_referans'] %}1{% else %}0{% endif %}+
+                            {% if t['uye3_referans'] %}1{% else %}0{% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        let csrfToken = '';
+        async function getCsrfToken() {
+            try {
+                const response = await fetch('/api/csrf-token');
+                const result = await response.json();
+                if (result.success) csrfToken = result.csrf_token;
+            } catch (error) { console.error(error); }
+        }
+        getCsrfToken();
+
+        function showAdminTab(tab, btn) {
+            document.querySelectorAll('.admin-tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-btn').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (btn) btn.classList.add('active');
+        }
+
+        async function saveAyarlar() {
+            if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
+            const yerSany = document.getElementById('ayar-yer-sany').value;
+            if (!yerSany || yerSany < 1 || yerSany > 10000) {
+                alert('Yer sany 1-10000 aralygynda bolmaly!');
+                return;
+            }
+            const data = {
+                turnir_senesi: document.getElementById('ayar-senesi').value,
+                turnir_wagty: document.getElementById('ayar-wagty').value,
+                turnir_karta: document.getElementById('ayar-karta').value,
+                turnir_gatnasym: document.getElementById('ayar-gatnasym').value,
+                turnir_tolek: document.getElementById('ayar-tolek').value,
+                turnir_tolek_usuly: document.getElementById('ayar-tolek-usuly').value,
+                turnir_yer_sany: yerSany,
+                csrf_token: csrfToken
+            };
+            try {
+                const response = await fetch('/api/admin-ayarlari-kaydet', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) location.reload();
+            } catch (error) { alert('Yalnyslyk: ' + error.message); }
+        }
+
+        async function saveBayraklar() {
+            if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
+            const data = {
+                bayrak_1: document.getElementById('ayar-b1').value + '|' + document.getElementById('ayar-b1-bonus').value,
+                bayrak_2: document.getElementById('ayar-b2').value,
+                bayrak_3: document.getElementById('ayar-b3').value,
+                bayrak_jemi: document.getElementById('ayar-bjemi').value,
+                csrf_token: csrfToken
+            };
+            try {
+                const response = await fetch('/api/admin-ayarlari-kaydet', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) location.reload();
+            } catch (error) { alert('Yalnyslyk: ' + error.message); }
+        }
+
+        async function onayla(refCode) {
+            if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
+            if (!confirm('Tassyklamak isleyarsinizmi?')) return;
+            try {
+                const response = await fetch('/api/admin-onayla', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({referans_kodu: refCode, csrf_token: csrfToken})
+                });
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+                const result = await response.json();
+                if (result.success) location.reload(); else alert(result.message);
+            } catch (error) { alert('Yalnyslyk: ' + error.message); }
+        }
+
+        async function reddet(refCode) {
+            if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
+            if (!confirm('Ret etmek isleyarsinizmi?')) return;
+            try {
+                const response = await fetch('/api/admin-reddet', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({referans_kodu: refCode, csrf_token: csrfToken})
+                });
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+                const result = await response.json();
+                if (result.success) location.reload(); else alert(result.message);
+            } catch (error) { alert('Yalnyslyk: ' + error.message); }
+        }
+
+        async function poz(refCode) {
+            if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
+            if (!confirm('Katylyjy pozmak isleyarsinizmi? Bu hereket yzyna alynyp bilmez!')) return;
+            try {
+                const response = await fetch('/api/admin-poz', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({referans_kodu: refCode, csrf_token: csrfToken})
+                });
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+                const result = await response.json();
+                if (result.success) location.reload(); else alert(result.message);
+            } catch (error) { alert('Yalnyslyk: ' + error.message); }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilim - PUBG Turnuvasy</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container main-content">
+        <header class="form-header">
+            <a href="/" class="back-btn">← Yza</a>
+            <h1>PROFILIM</h1>
+            <p>Katylma statusynyz</p>
+        </header>
+
+        <div class="profile-card">
+            <div class="profile-avatar"><span>🎮</span></div>
+            <div class="profile-info">
+                <h2>{{ katilimci['ad'] }}</h2>
+                <p class="profile-pubg-id">{{ katilimci['pubg_id'] }}</p>
+                <p class="profile-ref">{{ katilimci['referans_kodu'] }}</p>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <h3>STATUSYM</h3>
+            <div class="status-steps">
+                <div class="status-step {% if katilimci['kayit_tarihi'] %}completed{% else %}pending{% endif %}">
+                    <div class="step-icon">{% if katilimci['kayit_tarihi'] %}✅{% else %}⏳{% endif %}</div>
+                    <div class="step-info">
+                        <span class="step-title">Hasaba Alyndy</span>
+                        <span class="step-date">{{ katilimci['kayit_tarihi'] or 'Garasyl yar' }}</span>
+                    </div>
+                </div>
+                <div class="status-step {% if katilimci['odeme_durumu'] == 1 %}completed{% else %}pending{% endif %}">
+                    <div class="step-icon">{% if katilimci['odeme_durumu'] == 1 %}✅{% else %}⏳{% endif %}</div>
+                    <div class="step-info">
+                        <span class="step-title">Toleg</span>
+                        <span class="step-date">
+                            {% if katilimci['odeme_durumu'] == 1 %}Toleg edildi{% else %}Toleg garasyl yar{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="status-step {% if katilimci['admin_onay'] == 1 %}completed{% elif katilimci['admin_onay'] == 2 %}rejected{% else %}pending{% endif %}">
+                    <div class="step-icon">
+                        {% if katilimci['admin_onay'] == 1 %}✅{% elif katilimci['admin_onay'] == 2 %}❌{% else %}⏳{% endif %}
+                    </div>
+                    <div class="step-info">
+                        <span class="step-title">Admin Tassyklamasy</span>
+                        <span class="step-date">
+                            {% if katilimci['admin_onay'] == 1 %}Tassyklandy!{% elif katilimci['admin_onay'] == 2 %}Ret edildi{% else %}Garasyl yar{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {% if katilimci['admin_onay'] == 1 %}
+            <div class="status-badge approved">Siz Ustunlikli Tassyklandynyz!</div>
+            {% elif katilimci['admin_onay'] == 2 %}
+            <div class="status-badge rejected">Ret Edildi</div>
+            <a href="/odeme/{{ katilimci['referans_kodu'] }}" class="btn-primary" style="margin-top:15px;">TOLEGE GAYTADAN GIT</a>
+            {% elif katilimci['odeme_durumu'] == 0 %}
+            <a href="/odeme/{{ katilimci['referans_kodu'] }}" class="btn-primary" style="margin-top:15px;">TOLEGE GIT</a>
+            {% endif %}
+        </div>
+
+        <div class="team-section">
+            <h3>TOPARYM</h3>
+            {% if katilimci['takim_kodu'] %}
+                <div class="team-card">
+                    <div class="team-header">
+                        <h4>{{ katilimci['takim_adi'] or 'Toparym' }}</h4>
+                        <span class="team-code">{{ katilimci['takim_kodu'] }}</span>
+                    </div>
+                    <div class="team-members">
+                        <div class="team-member leader">
+                            <span class="member-role">Lider</span>
+                            <span class="member-name">{{ katilimci['ad'] }}</span>
+                            <span class="member-status">{% if katilimci['admin_onay'] == 1 %}✅{% else %}⏳{% endif %}</span>
+                        </div>
+                        {% for arkadas in takim_arkadaslari %}
+                        <div class="team-member">
+                            <span class="member-role">Agza</span>
+                            <span class="member-name">{{ arkadas['ad'] }}</span>
+                            <span class="member-status">{% if arkadas['admin_onay'] == 1 %}✅{% else %}⏳{% endif %}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if katilimci['takim_lideri'] == 1 %}
+                    <div class="team-invite">
+                        <p>Dostuny cagyryp, topara gos:</p>
+                        <div class="invite-code-box">
+                            <code>{{ katilimci['takim_kodu'] }}</code>
+                            <button onclick="copyTeamCode()" type="button">Nusga Al</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="team-empty">
+                    <p>Size topar baglanmady.</p>
+                    <a href="/takim/{{ katilimci['referans_kodu'] }}" class="btn-primary">TOPAR DUZ / GOSUL</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="share-section">
+            <h3>REFERANS KODYNYZY PAYLAS</h3>
+            <p>Dostlarynyza ugradyn:</p>
+            <div class="share-code-box">
+                <code>{{ katilimci['referans_kodu'] }}</code>
+                <button onclick="copyRefCode()" type="button">Nusga Al</button>
+            </div>
+        </div>
+
+        <div class="logout-section" style="text-align:center; margin-top:30px; padding:20px; border-top:1px solid rgba(255,255,255,0.1);">
+            <button onclick="logout()" type="button" style="background:rgba(255,45,85,0.15); border:1.5px solid rgba(255,45,85,0.4); color:#ff2d55; padding:12px 30px; border-radius:25px; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; cursor:pointer;">
+                🔓 CYKYS
+            </button>
+            <p style="font-size:11px; opacity:0.4; margin-top:10px;">Bash sahypada registrasiya duwmesi gornyar</p>
+        </div>
+    </div>
+
+    <script>
+        function copyTeamCode() {
+            const code = {{ katilimci['takim_kodu']|tojson }};
+            copyToClipboard(code, 'Topar kody nusga alyndy!');
+        }
+        function copyRefCode() {
+            const code = {{ katilimci['referans_kodu']|tojson }};
+            copyToClipboard(code, 'Referans kody nusga alyndy!');
+        }
+        function copyToClipboard(text, msg) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => alert(msg));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); alert(msg); } catch(e) { alert(text); }
+                document.body.removeChild(ta);
+            }
+        }
+
+        function logout() {
+            if (confirm('Hakykatdanam cykmak isleyarsinizmi?')) {
+                localStorage.removeItem('pubg_ref_code');
+                window.location.href = '/';
+            }
+        }
+    </script>
+</body>
+</html>

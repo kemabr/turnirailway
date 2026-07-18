@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toparym - PUBG Turnuvasy</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container main-content">
+        <header class="form-header">
+            <a href="/profil/{{ katilimci['referans_kodu'] }}" class="back-btn">← Yza</a>
+            <h1>TOPAR</h1>
+            <p>Topar duz ya-da dostunyn toparyna gosul</p>
+        </header>
+
+        <div class="team-tabs" role="tablist">
+            <button class="tab-btn active" onclick="showTab('create', this)" type="button" role="tab" aria-selected="true">Topar Duz</button>
+            <button class="tab-btn" onclick="showTab('join', this)" type="button" role="tab" aria-selected="false">Topara Gosul</button>
+        </div>
+
+        <div id="create-tab" class="tab-content active" role="tabpanel">
+            <form id="create-team-form" class="team-form" novalidate>
+                <input type="hidden" id="lider_ref" value="{{ katilimci['referans_kodu'] }}">
+                <div class="form-group">
+                    <label for="takim_adi">Topar Ady</label>
+                    <input type="text" id="takim_adi" placeholder="Mysal: Sniper Squad" required minlength="2" maxlength="50" autocomplete="off">
+                </div>
+                <div class="team-preview">
+                    <h4>Siz (Lider)</h4>
+                    <p>{{ katilimci['ad'] }} - {{ katilimci['pubg_id'] }}</p>
+                </div>
+                <div class="team-info-box">
+                    <p>Topar duzulenson, dostlarynyza topar kodynyzy berin.</p>
+                    <p>Her toparda 4 kisi bolup biler.</p>
+                </div>
+                <button type="submit" class="btn-submit" id="create-btn">
+                    <span class="btn-text">TOPAR DUZ</span>
+                </button>
+            </form>
+        </div>
+
+        <div id="join-tab" class="tab-content" role="tabpanel">
+            <form id="join-team-form" class="team-form" novalidate>
+                <input type="hidden" id="uye_ref" value="{{ katilimci['referans_kodu'] }}">
+                <div class="form-group">
+                    <label for="takim_kodu">Topar Kody</label>
+                    <input type="text" id="takim_kodu" placeholder="Mysal: TEAM-A3B7C" required maxlength="20" autocomplete="off">
+                </div>
+                <div class="team-info-box">
+                    <p>Dostunyzdan topar kodyny sorayn.</p>
+                    <p>Kody girizip "Topara Gosul" duwmesine basyn.</p>
+                </div>
+                <button type="submit" class="btn-submit" id="join-btn">
+                    <span class="btn-text">TOPARA GOSUL</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="team-success-modal" role="dialog">
+        <div class="modal-content success-modal">
+            <div class="success-icon">🎉</div>
+            <h2 id="team-success-title">Ustunlikli!</h2>
+            <p id="team-success-message"></p>
+            <a href="/profil/{{ katilimci['referans_kodu'] }}" class="btn-primary">Profilime Git</a>
+        </div>
+    </div>
+
+    <script>
+        let csrfToken = '';
+
+        async function getCsrfToken() {
+            try {
+                const response = await fetch('/api/csrf-token');
+                const result = await response.json();
+                if (result.success) csrfToken = result.csrf_token;
+            } catch (error) {
+                console.error('CSRF token almakda yalnyslyk:', error);
+            }
+        }
+
+        getCsrfToken();
+
+        function showTab(tab, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            document.getElementById(tab + '-tab').classList.add('active');
+            if (btn) {
+                btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+            }
+        }
+
+        document.getElementById('create-team-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const adi = document.getElementById('takim_adi').value.trim();
+            if (adi.length < 2 || adi.length > 50) {
+                alert('Topar ady 2-50 harp aralygynda bolmaly!');
+                return;
+            }
+            if (!csrfToken) {
+                alert('CSRF token tapylmady.');
+                await getCsrfToken();
+                if (!csrfToken) return;
+            }
+
+            const btn = document.getElementById('create-btn');
+            const btnText = btn.querySelector('.btn-text');
+            btnText.textContent = 'Duzulyar...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/takim-olustur', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lider_ref: document.getElementById('lider_ref').value,
+                        takim_adi: adi,
+                        csrf_token: csrfToken
+                    })
+                });
+
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('team-success-title').textContent = 'Topar Duzuldi!';
+                    document.getElementById('team-success-message').textContent = 'Topar kodynyz: ' + result.takim_kodu;
+                    document.getElementById('team-success-modal').style.display = 'flex';
+                } else {
+                    alert(result.message || 'Yalnyslyk yuze cykdy');
+                    await getCsrfToken();
+                }
+            } catch (error) {
+                alert('Yalnyslyk: ' + error.message);
+                await getCsrfToken();
+            } finally {
+                btnText.textContent = 'TOPAR DUZ';
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('join-team-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const kod = document.getElementById('takim_kodu').value.trim().toUpperCase();
+            if (!kod) {
+                alert('Topar kody girizin!');
+                return;
+            }
+            if (!csrfToken) {
+                alert('CSRF token tapylmady.');
+                await getCsrfToken();
+                if (!csrfToken) return;
+            }
+
+            const btn = document.getElementById('join-btn');
+            const btnText = btn.querySelector('.btn-text');
+            btnText.textContent = 'Gosulyar...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/takima-katil', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uye_ref: document.getElementById('uye_ref').value,
+                        takim_kodu: kod,
+                        csrf_token: csrfToken
+                    })
+                });
+
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('team-success-title').textContent = 'Topara Gosuldynyz!';
+                    document.getElementById('team-success-message').textContent = result.message;
+                    document.getElementById('team-success-modal').style.display = 'flex';
+                } else {
+                    alert(result.message || 'Yalnyslyk yuze cykdy');
+                    await getCsrfToken();
+                }
+            } catch (error) {
+                alert('Yalnyslyk: ' + error.message);
+                await getCsrfToken();
+            } finally {
+                btnText.textContent = 'TOPARA GOSUL';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

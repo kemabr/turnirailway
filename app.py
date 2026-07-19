@@ -12,7 +12,7 @@ from functools import wraps
 from html import escape as html_escape
 
 import requests
-from flask import Flask, render_template, request, jsonify, redirect, url_for, g, session, abort
+from flask import Flask, render_template, request, jsonify, redirect, url_for, g, session, abort, make_response
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -30,7 +30,11 @@ if not ADMIN_SIFRE_HASH:
     logging.warning("ADMIN_SIFRE_HASH bellenmedi, default ulanylýar!")
 
 CLOUDFLARE_WORKER_URL = os.environ.get('CLOUDFLARE_WORKER_URL', '')
-DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'turnuva.db')
+
+# Railway persistent storage path
+# Railway provides /app/.data/ or we can use the current directory
+DATABASE_DIR = os.environ.get('DATABASE_DIR', os.path.dirname(os.path.abspath(__file__)))
+DATABASE = os.path.join(DATABASE_DIR, 'turnuva.db')
 
 # Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -137,8 +141,12 @@ def generate_ref_code():
             return code
 
 def generate_csrf_token():
-    token = secrets.token_urlsafe(32)
-    session['csrf_token'] = token
+    # Token-ny diňe birinji gezek döret, soňra şol token-ny gaýtadan ulanyp ber
+    # Bu birnäçe tabda işleýän ulanyjylar üçin
+    token = session.get('csrf_token')
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session['csrf_token'] = token
     return token
 
 def validate_csrf_token(token):
@@ -217,12 +225,11 @@ def validate_phone(phone):
     cleaned = re.sub(r'[\s\-\+\(\)]', '', phone)
     if not cleaned.isdigit():
         return False, None
+    # Diňe 8 sanly ýa-da 993+8 sanly kabul et
     if len(cleaned) == 8:
         return True, cleaned
     if len(cleaned) == 11 and cleaned.startswith('993'):
-        return True, cleaned[3:]
-    if len(cleaned) == 12 and cleaned.startswith('993'):
-        return True, cleaned[3:]
+        return True, cleaned[3:]  # 993 aýyr, diňe 8 san galdyr
     return False, None
 
 def sanitize(text, max_len=100):
@@ -234,6 +241,7 @@ def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 def check_password(password):
+    # Ulanyjy diňe düz tekst paroly bilen barlamagy isleýär
     return password == ADMIN_SIFRE_HASH
 
 
@@ -577,7 +585,8 @@ def api_admin_login():
     logger.info(f"Admin login: {request.remote_addr}")
     return jsonify({'success': True, 'message': 'Giriş üstünlikli!'})
 
-@app.route('/admin/logout')
+@app.route('/admin/logout', methods=['POST'])
+@admin_required
 def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('admin_login'))
@@ -674,9 +683,20 @@ def api_admin_poz():
     if not kat:
         return jsonify({'success': False, 'message': 'Katylyjy tapylmady!'})
 
+    # Lider pozulanda topary öçür
     if kat['takim_lideri'] == 1 and kat['takim_kodu']:
         db.execute('DELETE FROM takimlar WHERE takim_kodu = ?', (kat['takim_kodu'],))
         db.execute('UPDATE katilimcilar SET takim_kodu = NULL, takim_lideri = 0 WHERE takim_kodu = ?', (kat['takim_kodu'],))
+    # Lider däl agza pozulanda, topar tablisasyndan arassala
+    elif kat['takim_kodu'] and kat['takim_lideri'] == 0:
+        team = db.execute('SELECT * FROM takimlar WHERE takim_kodu = ?', (kat['takim_kodu'],)).fetchone()
+        if team:
+            if team['uye1_referans'] == ref:
+                db.execute('UPDATE takimlar SET uye1_referans = NULL WHERE takim_kodu = ?', (kat['takim_kodu'],))
+            elif team['uye2_referans'] == ref:
+                db.execute('UPDATE takimlar SET uye2_referans = NULL WHERE takim_kodu = ?', (kat['takim_kodu'],))
+            elif team['uye3_referans'] == ref:
+                db.execute('UPDATE takimlar SET uye3_referans = NULL WHERE takim_kodu = ?', (kat['takim_kodu'],))
 
     db.execute('DELETE FROM katilimcilar WHERE referans_kodu = ?', (ref,))
     db.commit()
@@ -686,6 +706,7 @@ def api_admin_poz():
 
 
 @app.route('/api/katilimci/me')
+@login_required
 def api_katilimci_me():
     ref = session.get('user_ref')
     if not ref:
@@ -703,10 +724,11 @@ def api_katilimci_me():
     return jsonify({'success': True, 'katilimci': dict(kat)})
 
 @app.route('/api/katilimci/<ref_code>')
+@login_required
 def api_katilimci(ref_code):
     db = get_db()
     kat = db.execute("""
-        SELECT k.*, t.takim_adi 
+        SELECT k.referans_kodu, k.ad, k.telefon, k.takim_kodu, k.admin_onay, t.takim_adi 
         FROM katilimcilar k
         LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
         WHERE k.referans_kodu = ?

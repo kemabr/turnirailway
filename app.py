@@ -26,9 +26,8 @@ if not app.secret_key:
 
 ADMIN_SIFRE_HASH = os.environ.get('ADMIN_SIFRE_HASH', '')
 if not ADMIN_SIFRE_HASH:
-    # Default: 'admin123' SHA-256 hash
     ADMIN_SIFRE_HASH = 'admin123'
-    logging.warning("ADMIN_SIFRE_HASH bellenmedi, default hash ulanylýar!")
+    logging.warning("ADMIN_SIFRE_HASH bellenmedi, default ulanylýar!")
 
 CLOUDFLARE_WORKER_URL = os.environ.get('CLOUDFLARE_WORKER_URL', '')
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'turnuva.db')
@@ -68,9 +67,9 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 referans_kodu TEXT UNIQUE NOT NULL,
                 ad TEXT NOT NULL,
-                pubg_id TEXT NOT NULL,
-                telefon TEXT NOT NULL,
-                ulasim TEXT NOT NULL,
+                telefon TEXT UNIQUE NOT NULL,
+                parol_hash TEXT NOT NULL,
+                ulasim TEXT,
                 takim_kodu TEXT,
                 takim_lideri INTEGER DEFAULT 0,
                 odeme_durumu INTEGER DEFAULT 0,
@@ -114,6 +113,7 @@ def init_db():
         for key, value in defaults.items():
             db.execute("INSERT OR IGNORE INTO ayarlar (key, value) VALUES (?, ?)", (key, value))
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_ref ON katilimcilar(referans_kodu)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_telefon ON katilimcilar(telefon)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_takim ON katilimcilar(takim_kodu)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_takim_kod ON takimlar(takim_kodu)")
         db.commit()
@@ -203,30 +203,26 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user_logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
+
 def validate_phone(phone):
-    """Telefon belgisini barlaýar we arassalaýar."""
     if not phone:
         return False, None
-
-    # +, boşluk, tire we başga simvollary aýyr
     cleaned = re.sub(r'[\s\-\+\(\)]', '', phone)
-
-    # Diňe san barlygyny barla
     if not cleaned.isdigit():
         return False, None
-
-    # 8 sanly TMCell formaty (mysal: 61234567)
     if len(cleaned) == 8:
         return True, cleaned
-
-    # 11 sanly +993 formaty (mysal: 99361234567)
     if len(cleaned) == 11 and cleaned.startswith('993'):
-        return True, cleaned[3:]  # 993 aýyr, diňe 8 san gaýtar
-
-    # 12 sanly +993 formaty (mysal: 993612345678) - 9 sanly
+        return True, cleaned[3:]
     if len(cleaned) == 12 and cleaned.startswith('993'):
-        return True, cleaned[3:]  # 993 aýyr, diňe 9 san gaýtar
-
+        return True, cleaned[3:]
     return False, None
 
 def sanitize(text, max_len=100):
@@ -234,8 +230,10 @@ def sanitize(text, max_len=100):
         return ''
     return html_escape(str(text).strip())[:max_len]
 
+def hash_password(password):
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
 def check_password(password):
-    """Paroly tekst bilen deňeşdirýär"""
     return password == ADMIN_SIFRE_HASH
 
 
@@ -270,11 +268,17 @@ def rate_limit(e):
 def index():
     return render_template('index.html', stats=get_stats(), turnir=get_turnir_data(), bayraklar=get_bayraklar())
 
+# ===================== LOGIN / REGISTER =====================
+
 @app.route('/kayit')
 def kayit():
     if get_stats()['toplam'] >= get_stats()['yer_sany']:
         return redirect(url_for('index'))
     return render_template('kayit.html')
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
 @app.route('/api/kayit-ol', methods=['POST'])
 @limiter.limit("3 per minute")
@@ -285,19 +289,22 @@ def api_kayit_ol():
         return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
 
     ad = sanitize(data.get('ad', ''), 100)
-    pubg_id = sanitize(data.get('pubg_id', ''), 50)
     telefon = str(data.get('telefon', '')).strip()
-    ulasim = sanitize(data.get('ulasim', ''), 100)
+    parol = data.get('parol', '')
+    parol_tekrar = data.get('parol_tekrar', '')
 
-    if not all([ad, pubg_id, telefon, ulasim]):
+    if not all([ad, telefon, parol]):
         return jsonify({'success': False, 'message': 'Ahli maglumatlary dolduryň!'})
+
+    if len(parol) < 6:
+        return jsonify({'success': False, 'message': 'Parol 6 harpdan uly bolmaly!'})
+
+    if parol != parol_tekrar:
+        return jsonify({'success': False, 'message': 'Parollar deň däl!'})
 
     valid, telefon_clean = validate_phone(telefon)
     if not valid:
         return jsonify({'success': False, 'message': 'Telefon belgisi nadogry! Format: +993 XX XXX XXX ýa-da 8 san'})
-
-    if not pubg_id.isdigit():
-        return jsonify({'success': False, 'message': 'PUBG ID diňe san bolmaly!'})
 
     if len(ad) < 2:
         return jsonify({'success': False, 'message': 'Ad 2 harpdan uly bolmaly!'})
@@ -305,6 +312,12 @@ def api_kayit_ol():
     db = get_db()
     try:
         db.execute('BEGIN IMMEDIATE')
+
+        # Telefon eýýäm barmy?
+        existing = db.execute('SELECT 1 FROM katilimcilar WHERE telefon = ?', (telefon_clean,)).fetchone()
+        if existing:
+            db.execute('ROLLBACK')
+            return jsonify({'success': False, 'message': 'Bu telefon belgisi bilen eýýäm hasap açylypdyr!'})
 
         # Yer sanyny barla
         count = db.execute('SELECT COUNT(*) as s FROM katilimcilar').fetchone()['s']
@@ -314,29 +327,110 @@ def api_kayit_ol():
             return jsonify({'success': False, 'message': 'Ähli ýerler doldy!'})
 
         ref = generate_ref_code()
+        parol_hash = hash_password(parol)
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        db.execute("INSERT INTO katilimcilar (referans_kodu, ad, pubg_id, telefon, ulasim, kayit_tarihi) VALUES (?, ?, ?, ?, ?, ?)",
-                  (ref, ad, pubg_id, telefon_clean, ulasim, now))
+        db.execute("INSERT INTO katilimcilar (referans_kodu, ad, telefon, parol_hash, kayit_tarihi) VALUES (?, ?, ?, ?, ?)",
+                  (ref, ad, telefon_clean, parol_hash, now))
         db.commit()
     except sqlite3.IntegrityError:
         db.execute('ROLLBACK')
-        return jsonify({'success': False, 'message': 'Ýalňyşlyk! Gaýtadan synanyşyň.'})
+        return jsonify({'success': False, 'message': 'Bu telefon belgisi bilen eýýäm hasap açylypdyr!'})
     except Exception as e:
         db.execute('ROLLBACK')
         logger.error(f"Kayit hatasi: {e}")
         return jsonify({'success': False, 'message': 'Serwer ýalňyşlygy!'})
 
-    msg = f"🎮 <b>TÄZE KATYLYJY!</b>\n\n👤 {ad}\n🆔 {pubg_id}\n📞 {telefon_clean}\n🔑 {ref}"
+    msg = f"🎮 <b>TÄZE KATYLYJY!</b>\n\n👤 {ad}\n📞 {telefon_clean}\n🔑 {ref}"
     send_telegram_message(msg)
     logger.info(f"Kayit: {ref} - {ad}")
 
+    # Auto login
+    session['user_logged_in'] = True
+    session['user_ref'] = ref
+    session['user_telefon'] = telefon_clean
+
     return jsonify({'success': True, 'referans_kodu': ref, 'message': 'Ustunlikli!'})
 
-@app.route('/odeme/<ref_code>')
-def odeme(ref_code):
+@app.route('/api/login', methods=['POST'])
+@limiter.limit("5 per minute")
+def api_login():
+    data = request.get_json() or {}
+
+    if not validate_csrf_token(data.get('csrf_token', '')):
+        return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
+
+    telefon = str(data.get('telefon', '')).strip()
+    parol = data.get('parol', '')
+
+    if not all([telefon, parol]):
+        return jsonify({'success': False, 'message': 'Telefon we parol girizin!'})
+
+    valid, telefon_clean = validate_phone(telefon)
+    if not valid:
+        return jsonify({'success': False, 'message': 'Telefon belgisi nadogry!'})
+
+    parol_hash = hash_password(parol)
+    db = get_db()
+    kat = db.execute('SELECT * FROM katilimcilar WHERE telefon = ? AND parol_hash = ?', (telefon_clean, parol_hash)).fetchone()
+
+    if not kat:
+        return jsonify({'success': False, 'message': 'Telefon belgisi ýa-da parol nädogry!'})
+
+    session['user_logged_in'] = True
+    session['user_ref'] = kat['referans_kodu']
+    session['user_telefon'] = telefon_clean
+
+    logger.info(f"Login: {kat['referans_kodu']} - {kat['ad']}")
+    return jsonify({'success': True, 'referans_kodu': kat['referans_kodu'], 'message': 'Giriş üstünlikli!'})
+
+@app.route('/logout')
+def logout():
+    session.pop('user_logged_in', None)
+    session.pop('user_ref', None)
+    session.pop('user_telefon', None)
+    return redirect(url_for('index'))
+
+# ===================== PROFILE / PAYMENT / TEAM =====================
+
+@app.route('/profil')
+@login_required
+def profil():
+    ref_code = session.get('user_ref')
+    if not ref_code:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    kat = db.execute("""
+        SELECT k.*, t.takim_adi, t.takim_kodu as t_kod
+        FROM katilimcilar k
+        LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
+        WHERE k.referans_kodu = ?
+    """, (ref_code,)).fetchone()
+    if not kat:
+        session.clear()
+        return redirect(url_for('login'))
+
+    arkadaslar = []
+    if kat['takim_kodu']:
+        arkadaslar = db.execute("""
+            SELECT ad, referans_kodu, admin_onay 
+            FROM katilimcilar 
+            WHERE takim_kodu = ? AND referans_kodu != ?
+        """, (kat['takim_kodu'], ref_code)).fetchall()
+
+    return render_template('profil.html', katilimci=kat, takim_arkadaslari=arkadaslar)
+
+@app.route('/odeme')
+@login_required
+def odeme():
+    ref_code = session.get('user_ref')
+    if not ref_code:
+        return redirect(url_for('login'))
+
     kat = get_db().execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref_code,)).fetchone()
     if not kat:
-        return redirect(url_for('index'))
+        session.clear()
+        return redirect(url_for('login'))
     return render_template('odeme.html', katilimci=kat)
 
 @app.route('/api/odeme-yapildi', methods=['POST'])
@@ -346,7 +440,10 @@ def api_odeme_yapildi():
     if not validate_csrf_token(data.get('csrf_token', '')):
         return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
 
-    ref = data.get('referans_kodu', '')
+    ref = session.get('user_ref', '')
+    if not ref:
+        return jsonify({'success': False, 'message': 'Giriş ediň!'})
+
     db = get_db()
     kat = db.execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref,)).fetchone()
     if not kat:
@@ -362,33 +459,17 @@ def api_odeme_yapildi():
 
     return jsonify({'success': True, 'message': 'Töleg bildirimi ugradyldy!'})
 
-@app.route('/profil/<ref_code>')
-def profil(ref_code):
-    db = get_db()
-    kat = db.execute("""
-        SELECT k.*, t.takim_adi, t.takim_kodu as t_kod
-        FROM katilimcilar k
-        LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
-        WHERE k.referans_kodu = ?
-    """, (ref_code,)).fetchone()
-    if not kat:
-        return redirect(url_for('index'))
+@app.route('/takim')
+@login_required
+def takim():
+    ref_code = session.get('user_ref')
+    if not ref_code:
+        return redirect(url_for('login'))
 
-    arkadaslar = []
-    if kat['takim_kodu']:
-        arkadaslar = db.execute("""
-            SELECT ad, pubg_id, referans_kodu, admin_onay 
-            FROM katilimcilar 
-            WHERE takim_kodu = ? AND referans_kodu != ?
-        """, (kat['takim_kodu'], ref_code)).fetchall()
-
-    return render_template('profil.html', katilimci=kat, takim_arkadaslari=arkadaslar)
-
-@app.route('/takim/<ref_code>')
-def takim(ref_code):
     kat = get_db().execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref_code,)).fetchone()
     if not kat:
-        return redirect(url_for('index'))
+        session.clear()
+        return redirect(url_for('login'))
     return render_template('takim.html', katilimci=kat)
 
 @app.route('/api/takim-olustur', methods=['POST'])
@@ -398,7 +479,10 @@ def api_takim_olustur():
     if not validate_csrf_token(data.get('csrf_token', '')):
         return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
 
-    lider_ref = data.get('lider_ref', '')
+    lider_ref = session.get('user_ref', '')
+    if not lider_ref:
+        return jsonify({'success': False, 'message': 'Giriş ediň!'})
+
     takim_adi = sanitize(data.get('takim_adi', ''), 50)
 
     if len(takim_adi) < 2 or len(takim_adi) > 50:
@@ -426,7 +510,10 @@ def api_takima_katil():
     if not validate_csrf_token(data.get('csrf_token', '')):
         return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
 
-    uye_ref = data.get('uye_ref', '')
+    uye_ref = session.get('user_ref', '')
+    if not uye_ref:
+        return jsonify({'success': False, 'message': 'Giriş ediň!'})
+
     takim_kodu = str(data.get('takim_kodu', '')).strip().upper()
 
     if not re.match(r'^TEAM-[A-Z0-9]{5}$', takim_kodu):
@@ -447,12 +534,10 @@ def api_takima_katil():
     if say >= 4:
         return jsonify({'success': False, 'message': 'Bu topar doly (4 kişi)!'})
 
-    # sqlite3.Row -> dict öwür (get() metody ulanmak üçin)
     takim_dict = dict(takim)
 
     db.execute("UPDATE katilimcilar SET takim_kodu = ? WHERE referans_kodu = ?", (takim_kodu, uye_ref))
 
-    # dict.get() ulan (sqlite3.Row .get() ýok)
     if not takim_dict.get('uye1_referans'):
         db.execute('UPDATE takimlar SET uye1_referans = ? WHERE takim_kodu = ?', (uye_ref, takim_kodu))
     elif not takim_dict.get('uye2_referans'):
@@ -501,7 +586,7 @@ def admin_logout():
 @admin_required
 def admin_panel():
     db = get_db()
-    stats = get_stats()  # ✅ get_stats() ulan (yer_sany bar)
+    stats = get_stats()
 
     katilimcilar = db.execute("""
         SELECT k.*, t.takim_adi 
@@ -589,7 +674,6 @@ def api_admin_poz():
     if not kat:
         return jsonify({'success': False, 'message': 'Katylyjy tapylmady!'})
 
-    # Eger lider bolsa, topary hem poz
     if kat['takim_lideri'] == 1 and kat['takim_kodu']:
         db.execute('DELETE FROM takimlar WHERE takim_kodu = ?', (kat['takim_kodu'],))
         db.execute('UPDATE katilimcilar SET takim_kodu = NULL, takim_lideri = 0 WHERE takim_kodu = ?', (kat['takim_kodu'],))
@@ -600,9 +684,27 @@ def api_admin_poz():
     logger.info(f"Pozuldy: {ref}")
     return jsonify({'success': True, 'message': 'Katylyjy pozuldy!'})
 
+
+@app.route('/api/katilimci/me')
+def api_katilimci_me():
+    ref = session.get('user_ref')
+    if not ref:
+        return jsonify({'success': False, 'message': 'Giris edilmedi'}), 401
+    db = get_db()
+    kat = db.execute("""
+        SELECT k.*, t.takim_adi 
+        FROM katilimcilar k
+        LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
+        WHERE k.referans_kodu = ?
+    """, (ref,)).fetchone()
+    if not kat:
+        session.clear()
+        return jsonify({'success': False, 'message': 'Katylyjy tapylmady'}), 404
+    return jsonify({'success': True, 'katilimci': dict(kat)})
+
 @app.route('/api/katilimci/<ref_code>')
 def api_katilimci(ref_code):
-    db = get_db()  # ✅ Düzetme: get_db() goşuldy
+    db = get_db()
     kat = db.execute("""
         SELECT k.*, t.takim_adi 
         FROM katilimcilar k

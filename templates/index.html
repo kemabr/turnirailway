@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="PUBG Mobile Turnuvasy 2026 - Turkmenistan">
-    <title>PUBG Turnuvasy 2026</title>
+    <meta name="description" content="PUBG Mobile Turnir 2026 - Turkmenistan">
+    <title>PUBG Turnir 2026</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -25,7 +25,7 @@
                     <span class="logo-icon"><i class="fas fa-gamepad"></i></span>
                     <div class="logo-text">
                         <span class="logo-title">PUBG</span>
-                        <span class="logo-subtitle">TURNUVASY</span>
+                        <span class="logo-subtitle">TURNİR</span>
                     </div>
                 </div>
             </div>
@@ -41,14 +41,14 @@
         <section class="hero-section">
             <div class="hero-icon"><i class="fas fa-gamepad"></i></div>
             <h1 class="hero-title">PUBG MOBILE</h1>
-            <h2 class="hero-subtitle">TURNUVA</h2>
-            <p class="hero-desc">Ahli hakyky oyuncular gatnasya!</p>
+            <h2 class="hero-subtitle">TURNİR</h2>
+            <p class="hero-desc">Hakyky oyuncular gatnasya!</p>
         </section>
 
         <section class="counter-section">
             <div class="counter-header">
                 <div class="counter-left">
-                    <span class="counter-label">KATYLYJY SANI</span>
+                    <span class="counter-label">GATNASYJY SANY</span>
                     <div class="counter-value">
                         <span id="current-count">{{ stats.toplam }}</span>
                         <span class="counter-total">/ {{ stats.yer_sany }}</span>
@@ -64,9 +64,9 @@
             </div>
             <div class="counter-alert" id="counter-alert">
                 {% if stats.yer_sany > 0 and stats.toplam >= stats.yer_sany %}
-                    TURNIR BASLADI! Ahli yerler doldu!
+                    TURNIR BASLADY! Ahli yerler doldu!
                 {% elif stats.yer_sany > 0 %}
-                    {{ stats.yer_sany }} katylyja yetende turnir baslar! Galan: {{ stats.galan }} yer
+                    {{ stats.yer_sany }} gatnasyja yetende turnir baslar! Galan: {{ stats.galan }} yer
                 {% else %}
                     Yer sany bellenilmedi.
                 {% endif %}
@@ -133,7 +133,7 @@
         </section>
 
         <footer class="main-footer">
-            <p>2026 PUBG Turnuvasy | Ahli hukuklar goralan</p>
+            <p>2026 PUBG Turnir | Ahli hukuklar goralan</p>
             <p class="footer-location">Turkmenistan</p>
         </footer>
     </div>

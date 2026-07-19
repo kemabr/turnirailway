@@ -6,9 +6,12 @@
     <title>Profilim - PUBG Turnuvasy</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
     <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
         <div class="particle"></div>
         <div class="particle"></div>
         <div class="particle"></div>
@@ -16,13 +19,13 @@
 
     <div class="container main-content">
         <header class="form-header">
-            <a href="/" class="back-btn">← Yza</a>
+            <a href="/" class="back-btn"><i class="fas fa-arrow-left"></i> Yza</a>
             <h1>PROFILIM</h1>
             <p>Katylma statusynyz</p>
         </header>
 
         <div class="profile-card">
-            <div class="profile-avatar"><span>🎮</span></div>
+            <div class="profile-avatar"><span><i class="fas fa-gamepad"></i></span></div>
             <div class="profile-info">
                 <h2>{{ katilimci['ad'] }}</h2>
                 <p class="profile-pubg-id">{{ katilimci['pubg_id'] }}</p>
@@ -34,14 +37,14 @@
             <h3>STATUSYM</h3>
             <div class="status-steps">
                 <div class="status-step {% if katilimci['kayit_tarihi'] %}completed{% else %}pending{% endif %}">
-                    <div class="step-icon">{% if katilimci['kayit_tarihi'] %}✅{% else %}⏳{% endif %}</div>
+                    <div class="step-icon">{% if katilimci['kayit_tarihi'] %}<i class="fas fa-check-circle" style="color:#00c853"></i>{% else %}<i class="fas fa-hourglass-half" style="color:#ff8c00"></i>{% endif %}</div>
                     <div class="step-info">
                         <span class="step-title">Hasaba Alyndy</span>
                         <span class="step-date">{{ katilimci['kayit_tarihi'] or 'Garasyl yar' }}</span>
                     </div>
                 </div>
                 <div class="status-step {% if katilimci['odeme_durumu'] == 1 %}completed{% else %}pending{% endif %}">
-                    <div class="step-icon">{% if katilimci['odeme_durumu'] == 1 %}✅{% else %}⏳{% endif %}</div>
+                    <div class="step-icon">{% if katilimci['odeme_durumu'] == 1 %}<i class="fas fa-check-circle" style="color:#00c853"></i>{% else %}<i class="fas fa-hourglass-half" style="color:#ff8c00"></i>{% endif %}</div>
                     <div class="step-info">
                         <span class="step-title">Toleg</span>
                         <span class="step-date">
@@ -51,7 +54,7 @@
                 </div>
                 <div class="status-step {% if katilimci['admin_onay'] == 1 %}completed{% elif katilimci['admin_onay'] == 2 %}rejected{% else %}pending{% endif %}">
                     <div class="step-icon">
-                        {% if katilimci['admin_onay'] == 1 %}✅{% elif katilimci['admin_onay'] == 2 %}❌{% else %}⏳{% endif %}
+                        {% if katilimci['admin_onay'] == 1 %}<i class="fas fa-check-circle" style="color:#00c853"></i>{% elif katilimci['admin_onay'] == 2 %}<i class="fas fa-times-circle" style="color:#ff2d55"></i>{% else %}<i class="fas fa-hourglass-half" style="color:#ff8c00"></i>{% endif %}
                     </div>
                     <div class="step-info">
                         <span class="step-title">Admin Tassyklamasy</span>
@@ -84,13 +87,13 @@
                         <div class="team-member leader">
                             <span class="member-role">Lider</span>
                             <span class="member-name">{{ katilimci['ad'] }}</span>
-                            <span class="member-status">{% if katilimci['admin_onay'] == 1 %}✅{% else %}⏳{% endif %}</span>
+                            <span class="member-status">{% if katilimci['admin_onay'] == 1 %}<i class="fas fa-check-circle" style="color:#00c853"></i>{% else %}<i class="fas fa-hourglass-half" style="color:#ff8c00"></i>{% endif %}</span>
                         </div>
                         {% for arkadas in takim_arkadaslari %}
                         <div class="team-member">
                             <span class="member-role">Agza</span>
                             <span class="member-name">{{ arkadas['ad'] }}</span>
-                            <span class="member-status">{% if arkadas['admin_onay'] == 1 %}✅{% else %}⏳{% endif %}</span>
+                            <span class="member-status">{% if arkadas['admin_onay'] == 1 %}<i class="fas fa-check-circle" style="color:#00c853"></i>{% else %}<i class="fas fa-hourglass-half" style="color:#ff8c00"></i>{% endif %}</span>
                         </div>
                         {% endfor %}
                     </div>
@@ -123,7 +126,7 @@
 
         <div class="logout-section" style="text-align:center; margin-top:30px; padding:20px; border-top:1px solid rgba(255,255,255,0.1);">
             <button onclick="logout()" type="button" style="background:rgba(255,45,85,0.15); border:1.5px solid rgba(255,45,85,0.4); color:#ff2d55; padding:12px 30px; border-radius:25px; font-family:'Orbitron',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; cursor:pointer;">
-                🔓 CYKYS
+                <i class="fas fa-unlock-alt"></i> CYKYS
             </button>
             <p style="font-size:11px; opacity:0.4; margin-top:10px;">Bash sahypada registrasiya duwmesi gornyar</p>
         </div>
@@ -158,4 +161,5 @@
         }
     </script>
 </body>
-</html>
+                                                                                                                                                                                                                                          </html>
+                                                                                                                                                                                                                                          

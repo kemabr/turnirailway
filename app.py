@@ -16,7 +16,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, g
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-app = Flask(__name__, static_folder='static', static_url_path='/static')
+app = Flask(__name__, static_folder='static', static_url_path='/static', template_folder='templates')
 
 # ENVIRONMENT VARIABLES
 app.secret_key = os.environ.get('SECRET_KEY')

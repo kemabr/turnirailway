@@ -24,11 +24,11 @@ if not app.secret_key:
     app.secret_key = secrets.token_hex(32)
     logging.warning("SECRET_KEY bellenmedi, awto generasiya edildi!")
 
-ADMIN_SIFRE_HASH = os.environ.get('ADMIN_SIFRE_HASH')
+ADMIN_SIFRE_HASH = os.environ.get('ADMIN_SIFRE_HASH', '')
 if not ADMIN_SIFRE_HASH:
-    # Default: 'admin123' hash
-    ADMIN_SIFRE_HASH = 'ef92b768b4298f4f9e2c4f7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0'
-    logging.warning("ADMIN_SIFRE_HASH bellenmedi, default ulanylýar!")
+    # Default: 'admin123' SHA-256 hash
+    ADMIN_SIFRE_HASH = 'admin123'
+    logging.warning("ADMIN_SIFRE_HASH bellenmedi, default hash ulanylýar!")
 
 CLOUDFLARE_WORKER_URL = os.environ.get('CLOUDFLARE_WORKER_URL', '')
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'turnuva.db')
@@ -148,7 +148,11 @@ def send_telegram_message(message):
     if not CLOUDFLARE_WORKER_URL:
         return False
     try:
-        response = requests.post(f"{CLOUDFLARE_WORKER_URL}/send-message", json={'message': message}, timeout=10)
+        response = requests.post(
+            f"{CLOUDFLARE_WORKER_URL}/send-message",
+            json={'message': message},
+            timeout=15
+        )
         return response.status_code == 200
     except requests.RequestException:
         return False
@@ -200,13 +204,29 @@ def admin_required(f):
     return decorated
 
 def validate_phone(phone):
-    cleaned = phone.replace(' ', '').replace('-', '').replace('+', '')
-    if len(cleaned) == 8 and cleaned.isdigit():
+    """Telefon belgisini barlaýar we arassalaýar."""
+    if not phone:
+        return False, None
+
+    # +, boşluk, tire we başga simvollary aýyr
+    cleaned = re.sub(r'[\s\-\+\(\)]', '', phone)
+
+    # Diňe san barlygyny barla
+    if not cleaned.isdigit():
+        return False, None
+
+    # 8 sanly TMCell formaty (mysal: 61234567)
+    if len(cleaned) == 8:
         return True, cleaned
-    if len(cleaned) == 11 and cleaned.startswith('993') and cleaned[3:].isdigit() and len(cleaned[3:]) == 8:
-        return True, cleaned[3:]
-    if len(cleaned) == 12 and cleaned.startswith('993') and cleaned[3:].isdigit() and len(cleaned[3:]) == 9:
-        return True, cleaned[3:]
+
+    # 11 sanly +993 formaty (mysal: 99361234567)
+    if len(cleaned) == 11 and cleaned.startswith('993'):
+        return True, cleaned[3:]  # 993 aýyr, diňe 8 san gaýtar
+
+    # 12 sanly +993 formaty (mysal: 993612345678) - 9 sanly
+    if len(cleaned) == 12 and cleaned.startswith('993'):
+        return True, cleaned[3:]  # 993 aýyr, diňe 9 san gaýtar
+
     return False, None
 
 def sanitize(text, max_len=100):
@@ -285,6 +305,8 @@ def api_kayit_ol():
     db = get_db()
     try:
         db.execute('BEGIN IMMEDIATE')
+
+        # Yer sanyny barla
         count = db.execute('SELECT COUNT(*) as s FROM katilimcilar').fetchone()['s']
         yer = int(get_ayar('turnir_yer_sany', '100'))
         if count >= yer:
@@ -425,16 +447,21 @@ def api_takima_katil():
     if say >= 4:
         return jsonify({'success': False, 'message': 'Bu topar doly (4 kişi)!'})
 
+    # sqlite3.Row -> dict öwür (get() metody ulanmak üçin)
+    takim_dict = dict(takim)
+
     db.execute("UPDATE katilimcilar SET takim_kodu = ? WHERE referans_kodu = ?", (takim_kodu, uye_ref))
-    if not takim.get('uye1_referans'):
+
+    # dict.get() ulan (sqlite3.Row .get() ýok)
+    if not takim_dict.get('uye1_referans'):
         db.execute('UPDATE takimlar SET uye1_referans = ? WHERE takim_kodu = ?', (uye_ref, takim_kodu))
-    elif not takim.get('uye2_referans'):
+    elif not takim_dict.get('uye2_referans'):
         db.execute('UPDATE takimlar SET uye2_referans = ? WHERE takim_kodu = ?', (uye_ref, takim_kodu))
-    elif not takim.get('uye3_referans'):
+    elif not takim_dict.get('uye3_referans'):
         db.execute('UPDATE takimlar SET uye3_referans = ? WHERE takim_kodu = ?', (uye_ref, takim_kodu))
     db.commit()
 
-    msg = f"👥 <b>TOPARA TÄZE AGZA!</b>\n\nTopar: {takim['takim_adi']}\nKod: {takim_kodu}\n👤 {uye['ad']}"
+    msg = f"👥 <b>TOPARA TÄZE AGZA!</b>\n\nTopar: {takim_dict.get('takim_adi', 'Topar')}\nKod: {takim_kodu}\n👤 {uye['ad']}"
     send_telegram_message(msg)
     logger.info(f"Katil: {takim_kodu} - {uye['ad']}")
 
@@ -474,12 +501,7 @@ def admin_logout():
 @admin_required
 def admin_panel():
     db = get_db()
-    stats = db.execute("""
-        SELECT COALESCE(COUNT(*), 0) as toplam,
-               COALESCE(SUM(CASE WHEN odeme_durumu = 1 THEN 1 ELSE 0 END), 0) as odeme_yapan,
-               COALESCE(SUM(CASE WHEN admin_onay = 1 THEN 1 ELSE 0 END), 0) as onaylanan
-        FROM katilimcilar
-    """).fetchone()
+    stats = get_stats()  # ✅ get_stats() ulan (yer_sany bar)
 
     katilimcilar = db.execute("""
         SELECT k.*, t.takim_adi 
@@ -580,6 +602,7 @@ def api_admin_poz():
 
 @app.route('/api/katilimci/<ref_code>')
 def api_katilimci(ref_code):
+    db = get_db()  # ✅ Düzetme: get_db() goşuldy
     kat = db.execute("""
         SELECT k.*, t.takim_adi 
         FROM katilimcilar k

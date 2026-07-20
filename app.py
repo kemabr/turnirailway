@@ -75,6 +75,14 @@ if not app.secret_key:
     app.secret_key = secrets.token_hex(32)
     logging.warning("SECRET_KEY bellenmedi, awto generasiya edildi!")
 
+# Session cookie security configuration
+app.config.update(
+    SESSION_COOKIE_SECURE=True,      # Diňe HTTPS
+    SESSION_COOKIE_HTTPONLY=True,    # JavaScript okap bilmez
+    SESSION_COOKIE_SAMESITE='Lax',   # CSRF goraýyş
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=24)
+)
+
 ADMIN_SIFRE_HASH = os.environ.get('ADMIN_SIFRE_HASH', '')
 if not ADMIN_SIFRE_HASH:
     ADMIN_SIFRE_HASH = 'admin123'

@@ -59,14 +59,6 @@ app = Flask(__name__,
             static_url_path='/static', 
             template_folder=TEMPLATE_DIR)
 
-# Session cookie security settings
-app.config.update(
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-    PERMANENT_SESSION_LIFETIME=1800
-)
-
 # Log for debugging (using print since logger not ready yet)
 print(f"[STARTUP] BASE_DIR: {BASE_DIR}")
 print(f"[STARTUP] TEMPLATE_DIR: {TEMPLATE_DIR}")
@@ -131,6 +123,9 @@ def init_db():
                 ad TEXT NOT NULL,
                 telefon TEXT UNIQUE NOT NULL,
                 parol_hash TEXT NOT NULL,
+                pubg_id TEXT,
+                payment_phone TEXT,
+                tournament_id TEXT,
                 ulasim TEXT,
                 takim_kodu TEXT,
                 takim_lideri INTEGER DEFAULT 0,
@@ -177,6 +172,7 @@ def init_db():
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_ref ON katilimcilar(referans_kodu)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_telefon ON katilimcilar(telefon)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_takim ON katilimcilar(takim_kodu)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_pubg ON katilimcilar(pubg_id)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_takim_kod ON takimlar(takim_kodu)")
         db.commit()
 
@@ -272,8 +268,7 @@ def admin_required(f):
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('user_logged_in') or not session.get('user_ref'):
-            session.clear()
+        if not session.get('user_logged_in'):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
@@ -415,7 +410,6 @@ def api_kayit_ol():
     session['user_logged_in'] = True
     session['user_ref'] = ref
     session['user_telefon'] = telefon_clean
-    session.permanent = True
 
     return jsonify({'success': True, 'referans_kodu': ref, 'message': 'Ustunlikli!'})
 
@@ -447,7 +441,6 @@ def api_login():
     session['user_logged_in'] = True
     session['user_ref'] = kat['referans_kodu']
     session['user_telefon'] = telefon_clean
-    session.permanent = True
 
     logger.info(f"Login: {kat['referans_kodu']} - {kat['ad']}")
     return jsonify({'success': True, 'referans_kodu': kat['referans_kodu'], 'message': 'Giriş üstünlikli!'})
@@ -801,6 +794,59 @@ def api_katilimci(ref_code):
 @app.route('/api/csrf-token')
 def api_csrf_token():
     return jsonify({'success': True, 'csrf_token': generate_csrf_token()})
+
+# ===================== NEW ROUTES =====================
+
+@app.route('/turnir')
+def turnir():
+    return render_template('turnir.html')
+
+@app.route('/turnir/goşul')
+@login_required
+def turnir_gosul():
+    return render_template('turnir_gosul.html')
+
+@app.route('/magazyn')
+def magazyn():
+    return render_template('magazyn.html')
+
+@app.route('/menyu')
+def menyu():
+    return render_template('menyu.html')
+
+@app.route('/api/turnir-goşul', methods=['POST'])
+@limiter.limit("3 per minute")
+@login_required
+def api_turnir_gosul():
+    data = request.get_json() or {}
+
+    if not validate_csrf_token(data.get('csrf_token', '')):
+        return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
+
+    pubg_id = sanitize(data.get('pubg_id', ''), 20)
+    payment_phone = str(data.get('payment_phone', '')).strip()
+    tournament_id = sanitize(data.get('tournament_id', ''), 50)
+
+    if not pubg_id or len(pubg_id) < 8:
+        return jsonify({'success': False, 'message': 'PUBG ID 8 sanly bolmaly!'})
+
+    valid, phone_clean = validate_phone(payment_phone)
+    if not valid:
+        return jsonify({'success': False, 'message': 'Telefon belgisi nadogry!'})
+
+    ref = session.get('user_ref', '')
+    db = get_db()
+
+    # Update user's PUBG ID and payment phone
+    db.execute("""
+        UPDATE katilimcilar 
+        SET pubg_id = ?, payment_phone = ?, tournament_id = ?
+        WHERE referans_kodu = ?
+    """, (pubg_id, phone_clean, tournament_id, ref))
+    db.commit()
+
+    logger.info(f"Turnir goşul: {ref} -> {tournament_id}")
+    return jsonify({'success': True, 'message': 'Turnira goşuldyňyz!'})
 
 # ===================== START =====================
 

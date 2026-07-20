@@ -59,6 +59,14 @@ app = Flask(__name__,
             static_url_path='/static', 
             template_folder=TEMPLATE_DIR)
 
+# Session cookie security settings
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=1800
+)
+
 # Log for debugging (using print since logger not ready yet)
 print(f"[STARTUP] BASE_DIR: {BASE_DIR}")
 print(f"[STARTUP] TEMPLATE_DIR: {TEMPLATE_DIR}")
@@ -264,7 +272,8 @@ def admin_required(f):
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('user_logged_in'):
+        if not session.get('user_logged_in') or not session.get('user_ref'):
+            session.clear()
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
@@ -406,6 +415,7 @@ def api_kayit_ol():
     session['user_logged_in'] = True
     session['user_ref'] = ref
     session['user_telefon'] = telefon_clean
+    session.permanent = True
 
     return jsonify({'success': True, 'referans_kodu': ref, 'message': 'Ustunlikli!'})
 
@@ -437,6 +447,7 @@ def api_login():
     session['user_logged_in'] = True
     session['user_ref'] = kat['referans_kodu']
     session['user_telefon'] = telefon_clean
+    session.permanent = True
 
     logger.info(f"Login: {kat['referans_kodu']} - {kat['ad']}")
     return jsonify({'success': True, 'referans_kodu': kat['referans_kodu'], 'message': 'Giriş üstünlikli!'})

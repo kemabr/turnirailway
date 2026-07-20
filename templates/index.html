@@ -31,7 +31,8 @@
                 </div>
             </div>
             <div class="nav-right" id="nav-buttons">
-                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none;">REGISTRASYA</button>
+                <a href="/login" class="btn-nav-outline" id="btn-giris" style="display:inline-block;">GIRIS</a>
+                <a href="/kayit" class="btn-nav-primary" id="btn-kayit" style="display:inline-block;">REGISTRASYA</a>
                 <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;">PROFILIM</a>
             </div>
         </div>
@@ -56,74 +57,15 @@
                 </div>
             </div>
             <div class="nav-right" id="nav-buttons">
-                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none;">REGISTRASYA</button>
+                <a href="/login" class="btn-nav-outline" id="btn-giris" style="display:inline-block;">GIRIS</a>
+                <a href="/kayit" class="btn-nav-primary" id="btn-kayit" style="display:inline-block;">REGISTRASYA</a>
                 <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;">PROFILIM</a>
             </div>
         </div>
     </header>
 
     <!-- AUTH MODAL -->
-    <div class="auth-modal-overlay" id="auth-modal">
-        <div class="auth-modal">
-            <div class="auth-modal-header">
-                <h2 class="auth-modal-title">PUBG TURNIR</h2>
-                <button class="auth-modal-close" onclick="closeAuthModal()" type="button">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="showAuthTab('login', this)" type="button">GIRIS</button>
-                <button class="auth-tab" onclick="showAuthTab('register', this)" type="button">REGISTRASYA</button>
-            </div>
-
-            <!-- LOGIN TAB -->
-            <div id="auth-tab-login" class="auth-tab-content active">
-                <form id="login-form" novalidate>
-                    <div class="auth-form-group">
-                        <label><i class="fas fa-mobile-alt"></i> Telefon Nomeri</label>
-                        <input type="tel" id="login-telefon" placeholder="+993 XX XXX XXX" required maxlength="20" autocomplete="tel">
-                    </div>
-                    <div class="auth-form-group">
-                        <label><i class="fas fa-key"></i> Parol</label>
-                        <input type="password" id="login-parol" placeholder="Parolyňyz" required minlength="6" autocomplete="current-password">
-                    </div>
-                    <div class="auth-error" id="login-error"></div>
-                    <div class="auth-success" id="login-success"></div>
-                    <button type="submit" class="auth-submit-btn" id="login-submit-btn">
-                        <span class="btn-text">GIR</span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- REGISTER TAB -->
-            <div id="auth-tab-register" class="auth-tab-content">
-                <form id="register-form" novalidate>
-                    <div class="auth-form-group">
-                        <label><i class="fas fa-user"></i> Adynyz</label>
-                        <input type="text" id="reg-ad" placeholder="Adynyz" required minlength="2" maxlength="100" autocomplete="name">
-                    </div>
-                    <div class="auth-form-group">
-                        <label><i class="fas fa-mobile-alt"></i> Telefon Nomeri</label>
-                        <input type="tel" id="reg-telefon" placeholder="+993 XX XXX XXX" required maxlength="20" autocomplete="tel">
-                    </div>
-                    <div class="auth-form-group">
-                        <label><i class="fas fa-key"></i> Parol</label>
-                        <input type="password" id="reg-parol" placeholder="Parol duzun (minimum 6)" required minlength="6" maxlength="100" autocomplete="new-password">
-                    </div>
-                    <div class="auth-form-group">
-                        <label><i class="fas fa-key"></i> Paroly Tassykla</label>
-                        <input type="password" id="reg-parol-tekrar" placeholder="Paroly gaytalan" required minlength="6" maxlength="100" autocomplete="new-password">
-                    </div>
-                    <div class="auth-error" id="register-error"></div>
-                    <div class="auth-success" id="register-success"></div>
-                    <button type="submit" class="auth-submit-btn" id="register-submit-btn">
-                        <span class="btn-text">REGISTRASYA</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
+    
 
     <div class="container main-content" style="padding-bottom: 80px;">
         <section class="hero-section">
@@ -164,7 +106,7 @@
         <section class="categories-section">
             <h2 class="section-title">KATEGORIYALAR</h2>
             <div class="categories-grid">
-                <button class="category-card" onclick="openAuthModal()" type="button">
+                <button class="category-card" onclick="window.location.href='/turnir'" type="button">
                     <div class="category-icon"><i class="fas fa-users"></i></div>
                     <div class="category-info"><h3>Lobi Gur</h3><p>Dostlaryn bilen lobi gur</p></div>
                     <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
@@ -226,13 +168,15 @@
         </footer>
     </div>
 
-        <script>
+            <script>
         async function checkLoginStatus() {
             try {
                 const response = await fetch('/api/katilimci/me');
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
+                        document.getElementById('btn-giris').style.display = 'none';
+                        document.getElementById('btn-kayit').style.display = 'none';
                         document.getElementById('btn-profil').style.display = 'inline-flex';
                     }
                 }

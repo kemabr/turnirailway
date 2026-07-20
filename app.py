@@ -16,7 +16,58 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, g
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-app = Flask(__name__, static_folder='static', static_url_path='/static', template_folder='templates')
+# Get the directory where app.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Try to find templates folder - Railway might have different structure
+TEMPLATE_DIRS = [
+    os.path.join(BASE_DIR, 'templates'),
+    os.path.join(BASE_DIR, 'app', 'templates'),
+    '/app/templates',
+    os.path.join(os.getcwd(), 'templates'),
+]
+
+STATIC_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'app', 'static'),
+    '/app/static',
+    os.path.join(os.getcwd(), 'static'),
+]
+
+# Find existing template directory
+TEMPLATE_DIR = None
+for d in TEMPLATE_DIRS:
+    if os.path.exists(d) and os.path.exists(os.path.join(d, 'index.html')):
+        TEMPLATE_DIR = d
+        break
+
+# Find existing static directory  
+STATIC_DIR = None
+for d in STATIC_DIRS:
+    if os.path.exists(d):
+        STATIC_DIR = d
+        break
+
+# Fallback to default if not found
+if not TEMPLATE_DIR:
+    TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+if not STATIC_DIR:
+    STATIC_DIR = os.path.join(BASE_DIR, 'static')
+
+app = Flask(__name__, 
+            static_folder=STATIC_DIR, 
+            static_url_path='/static', 
+            template_folder=TEMPLATE_DIR)
+
+# Log for debugging
+logger.info(f"BASE_DIR: {BASE_DIR}")
+logger.info(f"TEMPLATE_DIR: {TEMPLATE_DIR}")
+logger.info(f"TEMPLATE_DIR exists: {os.path.exists(TEMPLATE_DIR)}")
+logger.info(f"STATIC_DIR: {STATIC_DIR}")
+logger.info(f"STATIC_DIR exists: {os.path.exists(STATIC_DIR)}")
+if os.path.exists(TEMPLATE_DIR):
+    logger.info(f"Templates: {os.listdir(TEMPLATE_DIR)}")
+
 
 # ENVIRONMENT VARIABLES
 app.secret_key = os.environ.get('SECRET_KEY')
@@ -32,8 +83,7 @@ if not ADMIN_SIFRE_HASH:
 CLOUDFLARE_WORKER_URL = os.environ.get('CLOUDFLARE_WORKER_URL', '')
 
 # Railway persistent storage path
-# Railway provides /app/.data/ or we can use the current directory
-DATABASE_DIR = os.environ.get('DATABASE_DIR', os.path.dirname(os.path.abspath(__file__)))
+DATABASE_DIR = os.environ.get('DATABASE_DIR', BASE_DIR)
 DATABASE = os.path.join(DATABASE_DIR, 'turnuva.db')
 
 # Logging

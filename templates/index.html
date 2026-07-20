@@ -225,7 +225,7 @@
                 </div>
             </div>
             <div class="nav-right" id="nav-buttons">
-                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none;">REGISTRASYA</button>
+                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:inline-block;">REGISTRASYA</button>
                 <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;">PROFILIM</a>
             </div>
         </div>
@@ -333,7 +333,7 @@
         <section class="categories-section">
             <h2 class="section-title">KATEGORIYALAR</h2>
             <div class="categories-grid">
-                <button class="category-card" onclick="openAuthModal()" type="button">
+                <button class="category-card" onclick="handleLobiGur()" type="button">
                     <div class="category-icon"><i class="fas fa-users"></i></div>
                     <div class="category-info"><h3>Lobi Gur</h3><p>Dostlaryn bilen lobi gur</p></div>
                     <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
@@ -601,6 +601,44 @@
 
         // Run on page load
         checkLoginStatus();
+
+        // Handle Lobi Gur button click
+        let isUserLoggedIn = false;
+
+        async function handleLobiGur() {
+            if (isUserLoggedIn) {
+                window.location.href = '/takim';
+            } else {
+                openAuthModal();
+            }
+        }
+
+        // Override checkLoginStatus to track login state
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/katilimci/me');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        isUserLoggedIn = true;
+                        document.getElementById('btn-kayit').style.display = 'none';
+                        document.getElementById('btn-profil').style.display = 'inline-flex';
+                    } else {
+                        isUserLoggedIn = false;
+                        document.getElementById('btn-kayit').style.display = 'inline-block';
+                        document.getElementById('btn-profil').style.display = 'none';
+                    }
+                } else {
+                    isUserLoggedIn = false;
+                    document.getElementById('btn-kayit').style.display = 'inline-block';
+                    document.getElementById('btn-profil').style.display = 'none';
+                }
+            } catch (error) {
+                console.log('Login status check failed');
+                isUserLoggedIn = false;
+                document.getElementById('btn-kayit').style.display = 'inline-block';
+            }
+        }
 
         function showSection(section) {
             ['turnir', 'bayrak', 'duzgun'].forEach(s => {

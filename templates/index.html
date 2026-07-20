@@ -229,34 +229,6 @@
         </div>
     </header>
 
-    
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    <header class="top-nav">
-        <div class="nav-container">
-            <div class="nav-left">
-                <div class="logo">
-                    <span class="logo-icon"><i class="fas fa-gamepad"></i></span>
-                    <div class="logo-text">
-                        <span class="logo-title">PUBG</span>
-                        <span class="logo-subtitle">TURNİR</span>
-                    </div>
-                </div>
-            </div>
-            <div class="nav-right" id="nav-buttons">
-                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:inline-block;">REGISTRASYA</button>
-                <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;"><i class="fas fa-user"></i></a>
-            </div>
-        </div>
-    </header>
-
-    <!-- AUTH MODAL -->
-    
-
     <div class="container main-content" style="padding-bottom: 80px;">
         <section class="hero-section">
             <div class="hero-icon"><i class="fas fa-gamepad"></i></div>
@@ -363,15 +335,15 @@
 
         async function getCsrfToken() {
             try {
-                const response = await fetch('/api/csrf-token');
+                const response = await fetch('/api/csrf-token', {
+                    credentials: 'same-origin'
+                });
                 const result = await response.json();
                 if (result.success) csrfToken = result.csrf_token;
             } catch (error) {
                 console.error('CSRF token almakda yalnyslyk:', error);
             }
         }
-
-        getCsrfToken();
 
         // Auth Modal Functions
         function openAuthModal() {
@@ -446,9 +418,11 @@
                 });
                 const result = await response.json();
                 if (result.success) {
+                    // ✅ UI ÜÝTGET - REGISTRASYA GIZLE, PROFIL GÖRKEZ
                     document.getElementById('btn-kayit').style.display = 'none';
                     document.getElementById('btn-profil').style.display = 'inline-flex';
-                    window.location.href = '/profil';
+                    closeAuthModal();
+                    // window.location.href = '/profil'; // Islege görä
                 } else {
                     errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
                     errorEl.classList.add('show');
@@ -515,9 +489,11 @@
                 });
                 const result = await response.json();
                 if (result.success) {
+                    // ✅ UI ÜÝTGET - REGISTRASYA GIZLE, PROFIL GÖRKEZ
                     document.getElementById('btn-kayit').style.display = 'none';
                     document.getElementById('btn-profil').style.display = 'inline-flex';
-                    window.location.href = '/profil';
+                    closeAuthModal();
+                    // window.location.href = '/profil'; // Islege görä
                 } else {
                     errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
                     errorEl.classList.add('show');
@@ -532,22 +508,39 @@
             }
         });
 
-        // Check login status
+        // Check login status - DÜZEDIŞLI
         async function checkLoginStatus() {
             try {
-                const response = await fetch('/api/katilimci/me');
+                const response = await fetch('/api/katilimci/me', {
+                    credentials: 'same-origin'
+                });
+
                 if (response.ok) {
                     const result = await response.json();
-                    if (result.success) {
+                    if (result.success && result.katilimci) {
                         document.getElementById('btn-kayit').style.display = 'none';
                         document.getElementById('btn-profil').style.display = 'inline-flex';
+                        return true;
                     }
                 }
+
+                document.getElementById('btn-kayit').style.display = 'inline-block';
+                document.getElementById('btn-profil').style.display = 'none';
+                return false;
+
             } catch (error) {
-                console.log('Login status check failed');
+                console.error('Login status check failed:', error);
+                document.getElementById('btn-kayit').style.display = 'inline-block';
+                document.getElementById('btn-profil').style.display = 'none';
+                return false;
             }
         }
-        checkLoginStatus();
+
+        // Sahypa ýüklenende barla
+        document.addEventListener('DOMContentLoaded', async function() {
+            await getCsrfToken();
+            await checkLoginStatus();
+        });
 
         function showSection(section) {
             ['turnir', 'bayrak', 'duzgun'].forEach(s => {

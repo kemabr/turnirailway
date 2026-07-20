@@ -3,8 +3,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
 }
 
 body {
@@ -15,7 +13,6 @@ body {
     overflow-x: hidden;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
 }
 
 /* ===================== BACKGROUND ANIMATION ===================== */
@@ -2796,24 +2793,8 @@ body {
 }
 
 /* ===================== FOCUS VISIBLE ===================== */
-/* Remove default browser outlines, use custom subtle focus */
-*:focus {
-    outline: none;
-}
-
 :focus-visible {
-    outline: 2px solid rgba(255, 45, 85, 0.5);
+    outline: 2px solid #ff2d55;
     outline-offset: 2px;
     border-radius: 4px;
-}
-
-/* Mobile touch feedback - no blue box */
-button, a, .category-card, .tab-btn, .btn-nav-primary, .btn-nav-outline {
-    -webkit-tap-highlight-color: transparent !important;
-    tap-highlight-color: transparent !important;
-}
-
-button:active, a:active, .category-card:active {
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent !important;
 }

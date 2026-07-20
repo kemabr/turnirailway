@@ -8,6 +8,201 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Modal Styles */
+        .auth-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .auth-modal-overlay.active {
+            display: flex;
+        }
+        .auth-modal {
+            background: linear-gradient(135deg, #12121a, #0d0d15);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(255, 45, 85, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 45, 85, 0.1);
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease;
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .auth-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 24px 0;
+        }
+        .auth-modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            color: #ff2d55;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 45, 85, 0.3);
+        }
+        .auth-modal-close {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: #e8e8e8;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .auth-modal-close:hover {
+            background: rgba(255, 45, 85, 0.2);
+            border-color: rgba(255, 45, 85, 0.4);
+            color: #ff2d55;
+            transform: rotate(90deg);
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 20px 24px 0;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #e8e8e8;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        .auth-tab.active {
+            background: linear-gradient(135deg, #ff2d55, #ff6b35);
+            border-color: #ff2d55;
+            box-shadow: 0 4px 20px rgba(255, 45, 85, 0.3);
+            color: white;
+        }
+        .auth-tab:hover:not(.active) {
+            border-color: rgba(255, 45, 85, 0.4);
+            background: rgba(255, 45, 85, 0.05);
+        }
+        .auth-tab-content {
+            display: none;
+            padding: 24px;
+        }
+        .auth-tab-content.active {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .auth-form-group {
+            margin-bottom: 18px;
+        }
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ff2d55;
+        }
+        .auth-form-group input {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #e8e8e8;
+            font-size: 16px;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .auth-form-group input:focus {
+            border-color: #ff2d55;
+            background: rgba(255, 45, 85, 0.05);
+            box-shadow: 0 0 20px rgba(255, 45, 85, 0.15);
+        }
+        .auth-form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+        .auth-submit-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #ff2d55, #ff6b35);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 14px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(255, 45, 85, 0.4);
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+        .auth-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(255, 45, 85, 0.5);
+            filter: brightness(1.1);
+        }
+        .auth-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .auth-error {
+            color: #ff2d55;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .auth-error.show {
+            display: block;
+        }
+        .auth-success {
+            color: #00c853;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .auth-success.show {
+            display: block;
+        }
+        /* Hide nav buttons except register */
+        #btn-login { display: none !important; }
+        #btn-profil { display: none; }
+    </style>
 </head>
 <body>
     <div class="bg-animation">
@@ -30,12 +225,73 @@
                 </div>
             </div>
             <div class="nav-right" id="nav-buttons">
-                <a href="/kayit" class="btn-nav-primary" id="btn-kayit">REGISTRASYA</a>
-                <a href="/login" class="btn-nav-outline" id="btn-login">GIRIS</a>
-                <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;">PROFILIM</a>
+                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()">REGISTRASYA</button>
             </div>
         </div>
     </header>
+
+    <!-- AUTH MODAL -->
+    <div class="auth-modal-overlay" id="auth-modal">
+        <div class="auth-modal">
+            <div class="auth-modal-header">
+                <h2 class="auth-modal-title">PUBG TURNIR</h2>
+                <button class="auth-modal-close" onclick="closeAuthModal()" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="showAuthTab('login', this)" type="button">GIRIS</button>
+                <button class="auth-tab" onclick="showAuthTab('register', this)" type="button">REGISTRASYA</button>
+            </div>
+
+            <!-- LOGIN TAB -->
+            <div id="auth-tab-login" class="auth-tab-content active">
+                <form id="login-form" novalidate>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-mobile-alt"></i> Telefon Nomeri</label>
+                        <input type="tel" id="login-telefon" placeholder="+993 XX XXX XXX" required maxlength="20" autocomplete="tel">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-key"></i> Parol</label>
+                        <input type="password" id="login-parol" placeholder="Parolyňyz" required minlength="6" autocomplete="current-password">
+                    </div>
+                    <div class="auth-error" id="login-error"></div>
+                    <div class="auth-success" id="login-success"></div>
+                    <button type="submit" class="auth-submit-btn" id="login-submit-btn">
+                        <span class="btn-text">GIR</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- REGISTER TAB -->
+            <div id="auth-tab-register" class="auth-tab-content">
+                <form id="register-form" novalidate>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-user"></i> Adynyz</label>
+                        <input type="text" id="reg-ad" placeholder="Adynyz" required minlength="2" maxlength="100" autocomplete="name">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-mobile-alt"></i> Telefon Nomeri</label>
+                        <input type="tel" id="reg-telefon" placeholder="+993 XX XXX XXX" required maxlength="20" autocomplete="tel">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-key"></i> Parol</label>
+                        <input type="password" id="reg-parol" placeholder="Parol duzun (minimum 6)" required minlength="6" maxlength="100" autocomplete="new-password">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-key"></i> Paroly Tassykla</label>
+                        <input type="password" id="reg-parol-tekrar" placeholder="Paroly gaytalan" required minlength="6" maxlength="100" autocomplete="new-password">
+                    </div>
+                    <div class="auth-error" id="register-error"></div>
+                    <div class="auth-success" id="register-success"></div>
+                    <button type="submit" class="auth-submit-btn" id="register-submit-btn">
+                        <span class="btn-text">REGISTRASYA</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <div class="container main-content">
         <section class="hero-section">
@@ -76,11 +332,11 @@
         <section class="categories-section">
             <h2 class="section-title">KATEGORIYALAR</h2>
             <div class="categories-grid">
-                <a href="/kayit" class="category-card" id="cat-topar">
+                <button class="category-card" onclick="openAuthModal()" type="button">
                     <div class="category-icon"><i class="fas fa-users"></i></div>
                     <div class="category-info"><h3>Lobi Gur</h3><p>Dostlaryn bilen lobi gur</p></div>
                     <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
-                </a>
+                </button>
                 <button class="category-card" onclick="showSection('turnir')" type="button">
                     <div class="category-icon"><i class="fas fa-calendar-alt"></i></div>
                     <div class="category-info"><h3>Turnir Maglumatlary</h3><p>Sene, wagt, karta</p></div>
@@ -139,27 +395,180 @@
     </div>
 
     <script>
-        // Server tarapyndan login statusyny barlamak
-        async function checkLoginStatus() {
+        let csrfToken = '';
+
+        async function getCsrfToken() {
             try {
-                const response = await fetch('/api/katilimci/me');
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        // Login bolan
-                        document.getElementById('btn-kayit').style.display = 'none';
-                        document.getElementById('btn-login').style.display = 'none';
-                        document.getElementById('btn-profil').style.display = 'inline-flex';
-                        document.getElementById('cat-topar').href = '/takim';
-                    }
-                }
+                const response = await fetch('/api/csrf-token');
+                const result = await response.json();
+                if (result.success) csrfToken = result.csrf_token;
             } catch (error) {
-                console.log('Login status barlanmady');
+                console.error('CSRF token almakda yalnyslyk:', error);
             }
         }
 
-        // Ilki bilen barla
-        checkLoginStatus();
+        getCsrfToken();
+
+        // Modal functions
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            getCsrfToken();
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.remove('active');
+            document.body.style.overflow = '';
+            // Clear forms
+            document.getElementById('login-form').reset();
+            document.getElementById('register-form').reset();
+            document.getElementById('login-error').classList.remove('show');
+            document.getElementById('register-error').classList.remove('show');
+        }
+
+        function showAuthTab(tab, btn) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('auth-tab-' + tab).classList.add('active');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('auth-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeAuthModal();
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAuthModal();
+        });
+
+        // Login form
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const telefon = document.getElementById('login-telefon').value.trim();
+            const parol = document.getElementById('login-parol').value;
+            const errorEl = document.getElementById('login-error');
+            const btn = document.getElementById('login-submit-btn');
+
+            if (!telefon || !parol) {
+                errorEl.textContent = 'Telefon we parol girizin!';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (!csrfToken) {
+                errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
+                errorEl.classList.add('show');
+                await getCsrfToken();
+                return;
+            }
+
+            btn.disabled = true;
+            errorEl.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telefon, parol, csrf_token: csrfToken })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = '/profil';
+                } else {
+                    errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
+                    errorEl.classList.add('show');
+                    await getCsrfToken();
+                }
+            } catch (error) {
+                errorEl.textContent = 'Yalnyslyk: ' + error.message;
+                errorEl.classList.add('show');
+                await getCsrfToken();
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Register form
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const ad = document.getElementById('reg-ad').value.trim();
+            const telefon = document.getElementById('reg-telefon').value.trim();
+            const parol = document.getElementById('reg-parol').value;
+            const parol_tekrar = document.getElementById('reg-parol-tekrar').value;
+            const errorEl = document.getElementById('register-error');
+            const btn = document.getElementById('register-submit-btn');
+
+            if (!ad || !telefon || !parol) {
+                errorEl.textContent = 'Ahli maglumatlary dolduryň!';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (ad.length < 2) {
+                errorEl.textContent = 'Ad 2 harpdan uly bolmaly!';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (parol.length < 6) {
+                errorEl.textContent = 'Parol 6 harpdan uly bolmaly!';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (parol !== parol_tekrar) {
+                errorEl.textContent = 'Parollar deň däl!';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            const telClean = telefon.replace(/\s/g, '').replace(/-/g, '').replace(/\+/g, '');
+            if (!/^\d{8}$/.test(telClean) && !/^993\d{8}$/.test(telClean)) {
+                errorEl.textContent = 'Telefon belgisi nadogry! Format: +993 XX XXX XXX ya-da 8 san';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            if (!csrfToken) {
+                errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
+                errorEl.classList.add('show');
+                await getCsrfToken();
+                return;
+            }
+
+            btn.disabled = true;
+            errorEl.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/kayit-ol', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ad, telefon, parol, parol_tekrar, csrf_token: csrfToken })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = '/profil';
+                } else {
+                    errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
+                    errorEl.classList.add('show');
+                    await getCsrfToken();
+                }
+            } catch (error) {
+                errorEl.textContent = 'Yalnyslyk: ' + error.message;
+                errorEl.classList.add('show');
+                await getCsrfToken();
+            } finally {
+                btn.disabled = false;
+            }
+        });
 
         function showSection(section) {
             ['turnir', 'bayrak', 'duzgun'].forEach(s => {

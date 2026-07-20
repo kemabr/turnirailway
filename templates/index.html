@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PUBG Mobile Turnir 2026 - Turkmenistan">
+    <title>PUBG Turnir 2026</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <header class="top-nav">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">
+                    <span class="logo-icon"><i class="fas fa-gamepad"></i></span>
+                    <div class="logo-text">
+                        <span class="logo-title">PUBG</span>
+                        <span class="logo-subtitle">TURNİR</span>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-right" id="nav-buttons">
+                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none;">REGISTRASYA</button>
+                <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;">PROFILIM</a>
+            </div>
+        </div>
+    </header>
+
+    
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <header class="top-nav">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">
+                    <span class="logo-icon"><i class="fas fa-gamepad"></i></span>
+                    <div class="logo-text">
+                        <span class="logo-title">PUBG</span>
+                        <span class="logo-subtitle">TURNİR</span>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-right" id="nav-buttons">
+                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none;">REGISTRASYA</button>
+                <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;">PROFILIM</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- AUTH MODAL -->
+    <div class="auth-modal-overlay" id="auth-modal">
+        <div class="auth-modal">
+            <div class="auth-modal-header">
+                <h2 class="auth-modal-title">PUBG TURNIR</h2>
+                <button class="auth-modal-close" onclick="closeAuthModal()" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="showAuthTab('login', this)" type="button">GIRIS</button>
+                <button class="auth-tab" onclick="showAuthTab('register', this)" type="button">REGISTRASYA</button>
+            </div>
+
+            <!-- LOGIN TAB -->
+            <div id="auth-tab-login" class="auth-tab-content active">
+                <form id="login-form" novalidate>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-mobile-alt"></i> Telefon Nomeri</label>
+                        <input type="tel" id="login-telefon" placeholder="+993 XX XXX XXX" required maxlength="20" autocomplete="tel">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-key"></i> Parol</label>
+                        <input type="password" id="login-parol" placeholder="Parolyňyz" required minlength="6" autocomplete="current-password">
+                    </div>
+                    <div class="auth-error" id="login-error"></div>
+                    <div class="auth-success" id="login-success"></div>
+                    <button type="submit" class="auth-submit-btn" id="login-submit-btn">
+                        <span class="btn-text">GIR</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- REGISTER TAB -->
+            <div id="auth-tab-register" class="auth-tab-content">
+                <form id="register-form" novalidate>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-user"></i> Adynyz</label>
+                        <input type="text" id="reg-ad" placeholder="Adynyz" required minlength="2" maxlength="100" autocomplete="name">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-mobile-alt"></i> Telefon Nomeri</label>
+                        <input type="tel" id="reg-telefon" placeholder="+993 XX XXX XXX" required maxlength="20" autocomplete="tel">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-key"></i> Parol</label>
+                        <input type="password" id="reg-parol" placeholder="Parol duzun (minimum 6)" required minlength="6" maxlength="100" autocomplete="new-password">
+                    </div>
+                    <div class="auth-form-group">
+                        <label><i class="fas fa-key"></i> Paroly Tassykla</label>
+                        <input type="password" id="reg-parol-tekrar" placeholder="Paroly gaytalan" required minlength="6" maxlength="100" autocomplete="new-password">
+                    </div>
+                    <div class="auth-error" id="register-error"></div>
+                    <div class="auth-success" id="register-success"></div>
+                    <button type="submit" class="auth-submit-btn" id="register-submit-btn">
+                        <span class="btn-text">REGISTRASYA</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="container main-content" style="padding-bottom: 80px;">
+        <section class="hero-section">
+            <div class="hero-icon"><i class="fas fa-gamepad"></i></div>
+            <h1 class="hero-title">PUBG MOBILE</h1>
+            <h2 class="hero-subtitle">TURNİR</h2>
+            <p class="hero-desc">Hakyky oyuncular gatnasya!</p>
+        </section>
+
+        <section class="counter-section">
+            <div class="counter-header">
+                <div class="counter-left">
+                    <span class="counter-label">GATNASYJY SANY</span>
+                    <div class="counter-value">
+                        <span id="current-count">{{ stats.toplam }}</span>
+                        <span class="counter-total">/ {{ stats.yer_sany }}</span>
+                    </div>
+                </div>
+                <div class="counter-right">
+                    <span class="counter-label">GALAN YER</span>
+                    <div class="counter-value-remaining" id="remaining-count">{{ stats.galan }}</div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar" style="width: {{ (stats.toplam / stats.yer_sany * 100) if stats.yer_sany > 0 else 0 }}%"></div>
+            </div>
+            <div class="counter-alert" id="counter-alert">
+                {% if stats.yer_sany > 0 and stats.toplam >= stats.yer_sany %}
+                    TURNIR BASLADY! Ahli yerler doldu!
+                {% elif stats.yer_sany > 0 %}
+                    {{ stats.yer_sany }} gatnasyja yetende turnir baslar! Galan: {{ stats.galan }} yer
+                {% else %}
+                    Yer sany bellenilmedi.
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="categories-section">
+            <h2 class="section-title">KATEGORIYALAR</h2>
+            <div class="categories-grid">
+                <button class="category-card" onclick="openAuthModal()" type="button">
+                    <div class="category-icon"><i class="fas fa-users"></i></div>
+                    <div class="category-info"><h3>Lobi Gur</h3><p>Dostlaryn bilen lobi gur</p></div>
+                    <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+                <button class="category-card" onclick="showSection('turnir')" type="button">
+                    <div class="category-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="category-info"><h3>Turnir Maglumatlary</h3><p>Sene, wagt, karta</p></div>
+                    <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+                <button class="category-card" onclick="showSection('bayrak')" type="button">
+                    <div class="category-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="category-info"><h3>Bayraklar</h3><p>Yenijilere garasyan bayraklar</p></div>
+                    <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+                <button class="category-card" onclick="showSection('duzgun')" type="button">
+                    <div class="category-icon"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="category-info"><h3>Duzgunler</h3><p>Turnir duzgunleri</p></div>
+                    <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+            </div>
+        </section>
+
+        <section class="info-section" id="section-turnir" style="display:none;">
+            <h2 class="section-title">TURNIR MAGLUMATLARY</h2>
+            <div class="info-list">
+                <div class="info-item"><span class="info-icon"><i class="fas fa-calendar"></i></span><div class="info-content"><span class="info-label">Senesi</span><span class="info-value">{{ turnir.senesi }}</span></div></div>
+                <div class="info-item"><span class="info-icon"><i class="fas fa-clock"></i></span><div class="info-content"><span class="info-label">Wagty</span><span class="info-value">{{ turnir.wagty }}</span></div></div>
+                <div class="info-item"><span class="info-icon"><i class="fas fa-map"></i></span><div class="info-content"><span class="info-label">Karta</span><span class="info-value">{{ turnir.karta }}</span></div></div>
+                <div class="info-item"><span class="info-icon"><i class="fas fa-user"></i></span><div class="info-content"><span class="info-label">Lobi sany</span><span class="info-value">{{ turnir.gatnasym }}</span></div></div>
+                <div class="info-item"><span class="info-icon"><i class="fas fa-money-bill-wave"></i></span><div class="info-content"><span class="info-label">Toleg</span><span class="info-value highlight">{{ turnir.tolek }}</span></div></div>
+                <div class="info-item"><span class="info-icon"><i class="fas fa-mobile-alt"></i></span><div class="info-content"><span class="info-label">Toleg usuly</span><span class="info-value">{{ turnir.tolek_usuly }}</span></div></div>
+            </div>
+        </section>
+
+        <section class="prizes-section" id="section-bayrak" style="display:none;">
+            <h2 class="section-title">BAYRAKLAR</h2>
+            <div class="prizes-grid">
+                <div class="prize-card gold"><div class="prize-rank"><i class="fas fa-medal" style="color:#ffd700"></i></div><div class="prize-info"><h3>1-nji Orun</h3><p class="prize-amount">{{ bayraklar.bir.mukdar }}</p><p class="prize-bonus">{{ bayraklar.bir.bonus }}</p></div></div>
+                <div class="prize-card silver"><div class="prize-rank"><i class="fas fa-medal" style="color:#c0c0c0"></i></div><div class="prize-info"><h3>2-nji Orun</h3><p class="prize-amount">{{ bayraklar.iki.mukdar }}</p></div></div>
+                <div class="prize-card bronze"><div class="prize-rank"><i class="fas fa-medal" style="color:#cd7f32"></i></div><div class="prize-info"><h3>3-nji Orun</h3><p class="prize-amount">{{ bayraklar.uc.mukdar }}</p></div></div>
+            </div>
+            <div class="prize-total"><span>JEMI BAYRAK:</span><strong>{{ bayraklar.jemi }}</strong></div>
+        </section>
+
+        <section class="rules-section" id="section-duzgun" style="display:none;">
+            <h2 class="section-title">DUZGUNLER</h2>
+            <div class="rules-list">
+                <div class="rule-item"><span class="rule-number">1</span><p>Gatnasyk tolegi {{ turnir.tolek }} (TMCell 0804 arkaly)</p></div>
+                <div class="rule-item"><span class="rule-number">2</span><p>Her topar 4 kisiden ybarat bolmaly</p></div>
+                <div class="rule-item"><span class="rule-number">3</span><p>Emulator we mobil oyuncylar ayratyn kategoriyada</p></div>
+                <div class="rule-item"><span class="rule-number">4</span><p>Hile we 3-nji tarap programmalar gadagan</p></div>
+                <div class="rule-item"><span class="rule-number">5</span><p>Turnir wagtynda cykan oyuncylar diskwalifisasiya ediler</p></div>
+            </div>
+        </section>
+
+        <footer class="main-footer">
+            <p>2026 PUBG Turnir | Ahli hukuklar goralan</p>
+            <p class="footer-location">Turkmenistan</p>
+        </footer>
+    </div>
+
+        <script>
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/katilimci/me');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        document.getElementById('btn-profil').style.display = 'inline-flex';
+                    }
+                }
+            } catch (error) {
+                console.log('Login status check failed');
+            }
+        }
+        checkLoginStatus();
+
+        function showSection(section) {
+            ['turnir', 'bayrak', 'duzgun'].forEach(s => {
+                const el = document.getElementById('section-' + s);
+                if (el) el.style.display = 'none';
+            });
+            const target = document.getElementById('section-' + section);
+            if (target) {
+                target.style.display = 'block';
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 45, 85, 0.15); padding: 8px 0 12px;">
+        <div class="bottom-nav-container" style="max-width: 480px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center;">
+            <a href="/" class="bottom-nav-item active" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: #ff2d55; text-decoration: none; font-size: 10px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px;">
+                <i class="fas fa-home" style="font-size: 20px;"></i>
+                <span>Esasy</span>
+            </a>
+            <a href="/turnir" class="bottom-nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 10px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px;">
+                <i class="fas fa-trophy" style="font-size: 20px;"></i>
+                <span>Turnir</span>
+            </a>
+            <a href="/magazyn" class="bottom-nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 10px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px;">
+                <i class="fas fa-shopping-cart" style="font-size: 20px;"></i>
+                <span>Magazyn</span>
+            </a>
+            <a href="/menyu" class="bottom-nav-item" style="display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 10px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px;">
+                <i class="fas fa-bars" style="font-size: 20px;"></i>
+                <span>Menýu</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>

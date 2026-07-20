@@ -225,7 +225,8 @@
                 </div>
             </div>
             <div class="nav-right" id="nav-buttons">
-                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()">REGISTRASYA</button>
+                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none;">REGISTRASYA</button>
+                <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;">PROFILIM</a>
             </div>
         </div>
     </header>
@@ -478,6 +479,9 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    // Update UI before redirect
+                    document.getElementById('btn-kayit').style.display = 'none';
+                    document.getElementById('btn-profil').style.display = 'inline-flex';
                     window.location.href = '/profil';
                 } else {
                     errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
@@ -555,6 +559,9 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    // Update UI before redirect
+                    document.getElementById('btn-kayit').style.display = 'none';
+                    document.getElementById('btn-profil').style.display = 'inline-flex';
                     window.location.href = '/profil';
                 } else {
                     errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
@@ -569,6 +576,31 @@
                 btn.disabled = false;
             }
         });
+
+        // Check login status on page load
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/katilimci/me');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // User is logged in
+                        document.getElementById('btn-kayit').style.display = 'none';
+                        document.getElementById('btn-profil').style.display = 'inline-flex';
+                    } else {
+                        // User is not logged in
+                        document.getElementById('btn-kayit').style.display = 'inline-block';
+                        document.getElementById('btn-profil').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.log('Login status check failed');
+                document.getElementById('btn-kayit').style.display = 'inline-block';
+            }
+        }
+
+        // Run on page load
+        checkLoginStatus();
 
         function showSection(section) {
             ['turnir', 'bayrak', 'duzgun'].forEach(s => {

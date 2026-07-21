@@ -189,6 +189,14 @@ def init_db():
         db.execute("CREATE INDEX IF NOT EXISTS idx_takim_kod ON takimlar(takim_kodu)")
         db.commit()
 
+
+# SQLite WAL mode for better concurrency
+@app.before_request
+def enable_wal():
+    db = get_db()
+    db.execute('PRAGMA journal_mode=WAL')
+    db.execute('PRAGMA synchronous=NORMAL')
+
 # ===================== HELPERS =====================
 
 def get_ayar(key, default=''):
@@ -458,7 +466,7 @@ def api_login():
     logger.info(f"Login: {kat['referans_kodu']} - {kat['ad']}")
     return jsonify({'success': True, 'referans_kodu': kat['referans_kodu'], 'message': 'Giriş üstünlikli!'})
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.pop('user_logged_in', None)
     session.pop('user_ref', None)
@@ -655,7 +663,7 @@ def api_admin_login():
     logger.info(f"Admin login: {request.remote_addr}")
     return jsonify({'success': True, 'message': 'Giriş üstünlikli!'})
 
-@app.route('/admin/logout', methods=['POST'])
+@app.route('/admin/logout', methods=['GET', 'POST'])
 @admin_required
 def admin_logout():
     session.pop('admin_logged_in', None)
@@ -817,7 +825,7 @@ def api_csrf_token():
 def turnir():
     return render_template('turnir.html')
 
-@app.route('/turnir/goşul')
+@app.route('/turnir/gosul')
 @login_required
 def turnir_gosul():
     return render_template('turnir_gosul.html')

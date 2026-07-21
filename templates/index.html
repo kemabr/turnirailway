@@ -330,244 +330,6 @@
         </footer>
     </div>
 
-    <script>
-        let csrfToken = '';
-        let isUserLoggedIn = false;
-
-        async function getCsrfToken() {
-            try {
-                const response = await fetch('/api/csrf-token', {
-                    credentials: 'same-origin'
-                });
-                const result = await response.json();
-                if (result.success) csrfToken = result.csrf_token;
-            } catch (error) {
-                console.error('CSRF token almakda yalnyslyk:', error);
-            }
-        }
-
-        // Sahypa ýüklenende CSRF token al we login status barla
-        document.addEventListener('DOMContentLoaded', async function() {
-            await getCsrfToken();
-            await checkLoginStatus();
-        });
-
-        // Auth Modal Functions
-        function openAuthModal() {
-            const modal = document.getElementById('auth-modal');
-            if (modal) {
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                getCsrfToken();
-            }
-        }
-
-        function closeAuthModal() {
-            const modal = document.getElementById('auth-modal');
-            if (modal) {
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-            const loginForm = document.getElementById('login-form');
-            const regForm = document.getElementById('register-form');
-            if (loginForm) loginForm.reset();
-            if (regForm) regForm.reset();
-            const loginError = document.getElementById('login-error');
-            const regError = document.getElementById('register-error');
-            if (loginError) loginError.classList.remove('show');
-            if (regError) regError.classList.remove('show');
-        }
-
-        // Close modal on overlay click
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('auth-modal');
-            if (e.target === modal) closeAuthModal();
-        });
-
-        // Close on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeAuthModal();
-        });
-
-        function showAuthTab(tab, btn) {
-            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.auth-tab-content').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('auth-tab-' + tab).classList.add('active');
-        }
-
-        // Login form
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const telefon = document.getElementById('login-telefon').value.trim();
-            const parol = document.getElementById('login-parol').value;
-            const errorEl = document.getElementById('login-error');
-            const btn = document.getElementById('login-submit-btn');
-
-            if (!telefon || !parol) {
-                errorEl.textContent = 'Telefon we parol girizin!';
-                errorEl.classList.add('show');
-                return;
-            }
-            if (!csrfToken) {
-                errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
-                errorEl.classList.add('show');
-                await getCsrfToken();
-                return;
-            }
-            btn.disabled = true;
-            errorEl.classList.remove('show');
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ telefon, parol, csrf_token: csrfToken }),
-                    credentials: 'same-origin'
-                });
-                const result = await response.json();
-                if (result.success) {
-                    isUserLoggedIn = true;
-                    updateNavButtons();
-                    closeAuthModal();
-                } else {
-                    errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
-                    errorEl.classList.add('show');
-                    await getCsrfToken();
-                }
-            } catch (error) {
-                errorEl.textContent = 'Yalnyslyk: ' + error.message;
-                errorEl.classList.add('show');
-                await getCsrfToken();
-            } finally {
-                btn.disabled = false;
-            }
-        });
-
-        // Register form
-        document.getElementById('register-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const ad = document.getElementById('reg-ad').value.trim();
-            const telefon = document.getElementById('reg-telefon').value.trim();
-            const parol = document.getElementById('reg-parol').value;
-            const parol_tekrar = document.getElementById('reg-parol-tekrar').value;
-            const errorEl = document.getElementById('register-error');
-            const btn = document.getElementById('register-submit-btn');
-
-            if (!ad || !telefon || !parol) {
-                errorEl.textContent = 'Ahli maglumatlary dolduryň!';
-                errorEl.classList.add('show');
-                return;
-            }
-            if (ad.length < 2) {
-                errorEl.textContent = 'Ad 2 harpdan uly bolmaly!';
-                errorEl.classList.add('show');
-                return;
-            }
-            if (parol.length < 6) {
-                errorEl.textContent = 'Parol 6 harpdan uly bolmaly!';
-                errorEl.classList.add('show');
-                return;
-            }
-            if (parol !== parol_tekrar) {
-                errorEl.textContent = 'Parollar deň däl!';
-                errorEl.classList.add('show');
-                return;
-            }
-            const telClean = telefon.replace(/\s/g, '').replace(/-/g, '').replace(/\+/g, '');
-            if (!/^\d{8}$/.test(telClean) && !/^993\d{8}$/.test(telClean)) {
-                errorEl.textContent = 'Telefon belgisi nadogry! Format: +993 XX XXX XXX ya-da 8 san';
-                errorEl.classList.add('show');
-                return;
-            }
-            if (!csrfToken) {
-                errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
-                errorEl.classList.add('show');
-                await getCsrfToken();
-                return;
-            }
-            btn.disabled = true;
-            errorEl.classList.remove('show');
-            try {
-                const response = await fetch('/api/kayit-ol', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ad, telefon, parol, parol_tekrar, csrf_token: csrfToken }),
-                    credentials: 'same-origin'
-                });
-                const result = await response.json();
-                if (result.success) {
-                    isUserLoggedIn = true;
-                    updateNavButtons();
-                    closeAuthModal();
-                } else {
-                    errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
-                    errorEl.classList.add('show');
-                    await getCsrfToken();
-                }
-            } catch (error) {
-                errorEl.textContent = 'Yalnyslyk: ' + error.message;
-                errorEl.classList.add('show');
-                await getCsrfToken();
-            } finally {
-                btn.disabled = false;
-            }
-        });
-
-        // Check login status - FIXED
-        async function checkLoginStatus() {
-            try {
-                const response = await fetch('/api/katilimci/me', {
-                    credentials: 'same-origin'
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && result.katilimci) {
-                        isUserLoggedIn = true;
-                        updateNavButtons();
-                        return true;
-                    }
-                }
-
-                isUserLoggedIn = false;
-                updateNavButtons();
-                return false;
-
-            } catch (error) {
-                console.error('Login status check failed:', error);
-                isUserLoggedIn = false;
-                updateNavButtons();
-                return false;
-            }
-        }
-
-        // Update nav buttons based on login status
-        function updateNavButtons() {
-            const btnKayit = document.getElementById('btn-kayit');
-            const btnProfil = document.getElementById('btn-profil');
-
-            if (isUserLoggedIn) {
-                if (btnKayit) btnKayit.style.display = 'none';
-                if (btnProfil) btnProfil.style.display = 'inline-flex';
-            } else {
-                if (btnKayit) btnKayit.style.display = 'inline-block';
-                if (btnProfil) btnProfil.style.display = 'none';
-            }
-        }
-
-        function showSection(section) {
-            ['turnir', 'bayrak', 'duzgun'].forEach(s => {
-                const el = document.getElementById('section-' + s);
-                if (el) el.style.display = 'none';
-            });
-            const target = document.getElementById('section-' + section);
-            if (target) {
-                target.style.display = 'block';
-                target.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-    </script>
-
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 45, 85, 0.15); padding: 8px 0 12px;">
         <div class="bottom-nav-container" style="max-width: 480px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center;">
@@ -652,5 +414,248 @@
             </div>
         </div>
     </div>
+
+    <!-- SCRIPT - AFTER ALL HTML ELEMENTS -->
+    <script>
+        let csrfToken = '';
+        let isUserLoggedIn = false;
+
+        async function getCsrfToken() {
+            try {
+                const response = await fetch('/api/csrf-token', {
+                    credentials: 'same-origin'
+                });
+                const result = await response.json();
+                if (result.success) csrfToken = result.csrf_token;
+            } catch (error) {
+                console.error('CSRF token almakda yalnyslyk:', error);
+            }
+        }
+
+        // Auth Modal Functions
+        function openAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                getCsrfToken();
+            }
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            if (loginForm) loginForm.reset();
+            if (regForm) regForm.reset();
+            const loginError = document.getElementById('login-error');
+            const regError = document.getElementById('register-error');
+            if (loginError) loginError.classList.remove('show');
+            if (regError) regError.classList.remove('show');
+        }
+
+        // Close modal on overlay click
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('auth-modal');
+            if (e.target === modal) closeAuthModal();
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeAuthModal();
+        });
+
+        function showAuthTab(tab, btn) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('auth-tab-' + tab).classList.add('active');
+        }
+
+        function updateNavButtons() {
+            const btnKayit = document.getElementById('btn-kayit');
+            const btnProfil = document.getElementById('btn-profil');
+
+            if (isUserLoggedIn) {
+                if (btnKayit) btnKayit.style.display = 'none';
+                if (btnProfil) btnProfil.style.display = 'inline-flex';
+            } else {
+                if (btnKayit) btnKayit.style.display = 'inline-block';
+                if (btnProfil) btnProfil.style.display = 'none';
+            }
+        }
+
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/katilimci/me', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.katilimci) {
+                        isUserLoggedIn = true;
+                        updateNavButtons();
+                        return true;
+                    }
+                }
+
+                isUserLoggedIn = false;
+                updateNavButtons();
+                return false;
+
+            } catch (error) {
+                console.error('Login status check failed:', error);
+                isUserLoggedIn = false;
+                updateNavButtons();
+                return false;
+            }
+        }
+
+        function showSection(section) {
+            ['turnir', 'bayrak', 'duzgun'].forEach(s => {
+                const el = document.getElementById('section-' + s);
+                if (el) el.style.display = 'none';
+            });
+            const target = document.getElementById('section-' + section);
+            if (target) {
+                target.style.display = 'block';
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // ===================== INITIALIZATION =====================
+        document.addEventListener('DOMContentLoaded', async function() {
+            await getCsrfToken();
+            await checkLoginStatus();
+
+            // Login form handler
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const telefon = document.getElementById('login-telefon').value.trim();
+                    const parol = document.getElementById('login-parol').value;
+                    const errorEl = document.getElementById('login-error');
+                    const btn = document.getElementById('login-submit-btn');
+
+                    if (!telefon || !parol) {
+                        errorEl.textContent = 'Telefon we parol girizin!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (!csrfToken) {
+                        errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
+                        errorEl.classList.add('show');
+                        await getCsrfToken();
+                        return;
+                    }
+                    btn.disabled = true;
+                    errorEl.classList.remove('show');
+                    try {
+                        const response = await fetch('/api/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ telefon, parol, csrf_token: csrfToken }),
+                            credentials: 'same-origin'
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            isUserLoggedIn = true;
+                            updateNavButtons();
+                            closeAuthModal();
+                        } else {
+                            errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
+                            errorEl.classList.add('show');
+                            await getCsrfToken();
+                        }
+                    } catch (error) {
+                        errorEl.textContent = 'Yalnyslyk: ' + error.message;
+                        errorEl.classList.add('show');
+                        await getCsrfToken();
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+            }
+
+            // Register form handler
+            const registerForm = document.getElementById('register-form');
+            if (registerForm) {
+                registerForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const ad = document.getElementById('reg-ad').value.trim();
+                    const telefon = document.getElementById('reg-telefon').value.trim();
+                    const parol = document.getElementById('reg-parol').value;
+                    const parol_tekrar = document.getElementById('reg-parol-tekrar').value;
+                    const errorEl = document.getElementById('register-error');
+                    const btn = document.getElementById('register-submit-btn');
+
+                    if (!ad || !telefon || !parol) {
+                        errorEl.textContent = 'Ahli maglumatlary dolduryň!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (ad.length < 2) {
+                        errorEl.textContent = 'Ad 2 harpdan uly bolmaly!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (parol.length < 6) {
+                        errorEl.textContent = 'Parol 6 harpdan uly bolmaly!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (parol !== parol_tekrar) {
+                        errorEl.textContent = 'Parollar deň däl!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    const telClean = telefon.replace(/\s/g, '').replace(/-/g, '').replace(/\+/g, '');
+                    if (!/^\d{8}$/.test(telClean) && !/^993\d{8}$/.test(telClean)) {
+                        errorEl.textContent = 'Telefon belgisi nadogry! Format: +993 XX XXX XXX ya-da 8 san';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (!csrfToken) {
+                        errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
+                        errorEl.classList.add('show');
+                        await getCsrfToken();
+                        return;
+                    }
+                    btn.disabled = true;
+                    errorEl.classList.remove('show');
+                    try {
+                        const response = await fetch('/api/kayit-ol', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ad, telefon, parol, parol_tekrar, csrf_token: csrfToken }),
+                            credentials: 'same-origin'
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            isUserLoggedIn = true;
+                            updateNavButtons();
+                            closeAuthModal();
+                        } else {
+                            errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
+                            errorEl.classList.add('show');
+                            await getCsrfToken();
+                        }
+                    } catch (error) {
+                        errorEl.textContent = 'Yalnyslyk: ' + error.message;
+                        errorEl.classList.add('show');
+                        await getCsrfToken();
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

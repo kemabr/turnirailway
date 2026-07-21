@@ -15,6 +15,7 @@ import requests
 from flask import Flask, render_template, request, jsonify, redirect, url_for, g, session, abort, make_response
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Get the directory where app.py is located
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -59,6 +60,9 @@ app = Flask(__name__,
             static_url_path='/static', 
             template_folder=TEMPLATE_DIR)
 
+# FIX 1: ProxyFix - Railway arkaly proxy HTTPS diýip bilsin
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
 # Log for debugging (using print since logger not ready yet)
 print(f"[STARTUP] BASE_DIR: {BASE_DIR}")
 print(f"[STARTUP] TEMPLATE_DIR: {TEMPLATE_DIR}")
@@ -75,6 +79,7 @@ if not app.secret_key:
     app.secret_key = secrets.token_hex(32)
     logging.warning("SECRET_KEY bellenmedi, awto generasiya edildi!")
 
+# Admin parol - DÜZ TEKST galýar (ulanyjy islegi boýunça)
 ADMIN_SIFRE_HASH = os.environ.get('ADMIN_SIFRE_HASH', '')
 if not ADMIN_SIFRE_HASH:
     ADMIN_SIFRE_HASH = 'admin123'
@@ -98,7 +103,7 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-# Session cookie security configuration
+# FIX 2: Session cookie - Railway üçin Lax we Secure
 app.config.update(
     SESSION_COOKIE_SECURE=True,      # Diňe HTTPS
     SESSION_COOKIE_HTTPONLY=True,    # JavaScript okap bilmez
@@ -203,8 +208,6 @@ def generate_ref_code():
             return code
 
 def generate_csrf_token():
-    # Token-ny diňe birinji gezek döret, soňra şol token-ny gaýtadan ulanyp ber
-    # Bu birnäçe tabda işleýän ulanyjylar üçin
     token = session.get('csrf_token')
     if not token:
         token = secrets.token_urlsafe(32)
@@ -418,6 +421,7 @@ def api_kayit_ol():
     session['user_logged_in'] = True
     session['user_ref'] = ref
     session['user_telefon'] = telefon_clean
+    session.permanent = True
 
     return jsonify({'success': True, 'referans_kodu': ref, 'message': 'Ustunlikli!'})
 
@@ -449,6 +453,7 @@ def api_login():
     session['user_logged_in'] = True
     session['user_ref'] = kat['referans_kodu']
     session['user_telefon'] = telefon_clean
+    session.permanent = True
 
     logger.info(f"Login: {kat['referans_kodu']} - {kat['ad']}")
     return jsonify({'success': True, 'referans_kodu': kat['referans_kodu'], 'message': 'Giriş üstünlikli!'})
@@ -505,6 +510,7 @@ def odeme():
 
 @app.route('/api/odeme-yapildi', methods=['POST'])
 @limiter.limit("5 per minute")
+@login_required
 def api_odeme_yapildi():
     data = request.get_json() or {}
     if not validate_csrf_token(data.get('csrf_token', '')):
@@ -543,6 +549,7 @@ def takim():
     return render_template('takim.html', katilimci=kat)
 
 @app.route('/api/takim-olustur', methods=['POST'])
+@login_required
 @limiter.limit("3 per minute")
 def api_takim_olustur():
     data = request.get_json() or {}
@@ -574,6 +581,7 @@ def api_takim_olustur():
     return jsonify({'success': True, 'takim_kodu': kod, 'message': 'Topar üstünlikli döredildi!'})
 
 @app.route('/api/takima-katil', methods=['POST'])
+@login_required
 @limiter.limit("3 per minute")
 def api_takima_katil():
     data = request.get_json() or {}
@@ -823,8 +831,8 @@ def menyu():
     return render_template('menyu.html')
 
 @app.route('/api/turnir-goşul', methods=['POST'])
-@limiter.limit("3 per minute")
 @login_required
+@limiter.limit("3 per minute")
 def api_turnir_gosul():
     data = request.get_json() or {}
 
@@ -835,8 +843,9 @@ def api_turnir_gosul():
     payment_phone = str(data.get('payment_phone', '')).strip()
     tournament_id = sanitize(data.get('tournament_id', ''), 50)
 
-    if not pubg_id or len(pubg_id) < 8:
-        return jsonify({'success': False, 'message': 'PUBG ID 8 sanly bolmaly!'})
+    # FIX: PUBG ID diňe san bolmaly
+    if not pubg_id or len(pubg_id) < 8 or not pubg_id.isdigit():
+        return jsonify({'success': False, 'message': 'PUBG ID diňe san bolmaly (minimum 8)!'})
 
     valid, phone_clean = validate_phone(payment_phone)
     if not valid:

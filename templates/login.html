@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giris - PUBG Turnir</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .auth-header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            position: relative;
+        }
+        .auth-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #ff2d55;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 45, 85, 0.3);
+        }
+        .auth-header p {
+            font-size: 14px;
+            opacity: 0.7;
+            color: #a0a0c0;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 12px;
+            margin: 0 20px 24px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 6px;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 14px;
+            background: transparent;
+            border: none;
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .auth-tab.active {
+            background: linear-gradient(135deg, #ff2d55, #ff6b35);
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 45, 85, 0.3);
+        }
+        .auth-form-container {
+            flex: 1;
+            padding: 0 20px 20px;
+        }
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .auth-input-group {
+            position: relative;
+        }
+        .auth-input-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ff2d55;
+        }
+        .auth-input-group input {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #e8e8e8;
+            font-size: 16px;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .auth-input-group input:focus {
+            border-color: #ff2d55;
+            background: rgba(255, 45, 85, 0.08);
+        }
+        .auth-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .auth-submit-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff2d55, #ff6b35);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(255, 45, 85, 0.4);
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+        .auth-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(255, 45, 85, 0.5);
+        }
+        .auth-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .auth-forgot {
+            text-align: center;
+            margin: 16px 0;
+        }
+        .auth-forgot a {
+            color: #ff2d55;
+            font-size: 13px;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+        .auth-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        }
+        .auth-divider span {
+            position: relative;
+            background: #0a0a0f;
+            padding: 0 16px;
+            font-size: 12px;
+            opacity: 0.5;
+            color: #a0a0c0;
+        }
+        .auth-alt-btn {
+            width: 100%;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            color: #e8e8e8;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+        }
+        .auth-alt-btn:hover {
+            border-color: #ff2d55;
+            color: #ff2d55;
+            background: rgba(255, 45, 85, 0.08);
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 45, 85, 0.15);
+            padding: 8px 0 12px;
+        }
+        .bottom-nav-container {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        .bottom-nav-item i {
+            font-size: 20px;
+        }
+        .bottom-nav-item.active {
+            color: #ff2d55;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="auth-page">
+        <header class="auth-header">
+            <a href="/" class="back-btn" style="position: absolute; left: 20px; top: 20px;"><i class="fas fa-arrow-left"></i> Yza</a>
+            <h1>GIRIS</h1>
+            <p>Hasabyňyza girin</p>
+        </header>
+
+        <div class="auth-tabs">
+            <a href="/login" class="auth-tab active">GIRIS</a>
+            <a href="/kayit" class="auth-tab">REGISTRASYA</a>
+        </div>
+
+        <div class="auth-form-container">
+            <form id="login-form" class="auth-form" novalidate>
+                <div class="auth-input-group">
+                    <label><i class="fas fa-mobile-alt"></i> Telefon Nomeri</label>
+                    <input type="tel" id="telefon" placeholder="+993 XX XXX XXX" required maxlength="20" autocomplete="tel">
+                </div>
+
+                <div class="auth-input-group">
+                    <label><i class="fas fa-key"></i> Parol</label>
+                    <input type="password" id="parol" placeholder="Parolyňyz" required minlength="6" maxlength="100" autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="auth-submit-btn" id="login-btn">
+                    <span class="btn-text">GIR</span>
+                </button>
+            </form>
+
+            <div class="auth-forgot">
+                <a href="#">Paroly ýatdan çykardym?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-container">
+            <a href="/" class="bottom-nav-item">
+                <i class="fas fa-home"></i>
+                <span>Esasy</span>
+            </a>
+            <a href="/turnir" class="bottom-nav-item">
+                <i class="fas fa-trophy"></i>
+                <span>Turnir</span>
+            </a>
+            <a href="/magazyn" class="bottom-nav-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Magazyn</span>
+            </a>
+            <a href="/menyu" class="bottom-nav-item">
+                <i class="fas fa-bars"></i>
+                <span>Menýu</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let csrfToken = '';
+
+        async function getCsrfToken() {
+            try {
+                const response = await fetch('/api/csrf-token');
+                const result = await response.json();
+                if (result.success) csrfToken = result.csrf_token;
+            } catch (error) {
+                console.error('CSRF token almakda yalnyslyk:', error);
+            }
+        }
+
+        getCsrfToken();
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const telefon = document.getElementById('telefon').value.trim();
+            const parol = document.getElementById('parol').value;
+
+            if (!telefon || !parol) {
+                alert('Telefon we parol girizin!');
+                return;
+            }
+
+            if (!csrfToken) {
+                alert('CSRF token tapylmady. Sahypany tezeleyn.');
+                await getCsrfToken();
+                if (!csrfToken) return;
+            }
+
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+
+            const data = {
+                telefon: telefon,
+                parol: parol,
+                csrf_token: csrfToken
+            };
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = '/profil';
+                } else {
+                    alert(result.message || 'Telefon ýa-da parol nadogry!');
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert('Yalnyslyk yuze cykdy: ' + error.message);
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

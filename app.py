@@ -189,14 +189,6 @@ def init_db():
         db.execute("CREATE INDEX IF NOT EXISTS idx_takim_kod ON takimlar(takim_kodu)")
         db.commit()
 
-
-# SQLite WAL mode for better concurrency
-@app.before_request
-def enable_wal():
-    db = get_db()
-    db.execute('PRAGMA journal_mode=WAL')
-    db.execute('PRAGMA synchronous=NORMAL')
-
 # ===================== HELPERS =====================
 
 def get_ayar(key, default=''):
@@ -825,6 +817,7 @@ def api_csrf_token():
 def turnir():
     return render_template('turnir.html')
 
+@app.route('/turnir/goşul')
 @app.route('/turnir/gosul')
 @login_required
 def turnir_gosul():

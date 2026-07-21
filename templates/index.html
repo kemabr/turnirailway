@@ -201,6 +201,15 @@
         .auth-error.show {
             display: block;
         }
+        /* Mobile tap highlight fix */
+        .category-card, .bottom-nav-item, button, a {
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-touch-callout: none !important;
+        }
+        .category-card:active, .bottom-nav-item:active, button:active, a:active {
+            background-color: transparent !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
 </style></head>
 <body>
     <div class="bg-animation">
@@ -567,7 +576,7 @@
                         if (result.success) {
                             isUserLoggedIn = true;
                             updateNavButtons();
-                            closeAuthModal();
+                            window.location.href = '/profil';
                         } else {
                             errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
                             errorEl.classList.add('show');
@@ -640,7 +649,7 @@
                         if (result.success) {
                             isUserLoggedIn = true;
                             updateNavButtons();
-                            closeAuthModal();
+                            window.location.href = '/profil';
                         } else {
                             errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
                             errorEl.classList.add('show');

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import o
 import random
 import string
 import sqlite3

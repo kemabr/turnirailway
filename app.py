@@ -656,7 +656,6 @@ def api_admin_login():
     return jsonify({'success': True, 'message': 'Giriş üstünlikli!'})
 
 @app.route('/admin/logout', methods=['GET', 'POST'])
-@admin_required
 def admin_logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('admin_login'))
@@ -817,7 +816,6 @@ def api_csrf_token():
 def turnir():
     return render_template('turnir.html')
 
-@app.route('/turnir/goşul')
 @app.route('/turnir/gosul')
 @login_required
 def turnir_gosul():

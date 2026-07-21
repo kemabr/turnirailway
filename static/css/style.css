@@ -2798,3 +2798,96 @@ body {
     outline-offset: 2px;
     border-radius: 4px;
 }
+
+/* ===================== BOTTOM NAVIGATION ===================== */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(10, 10, 15, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 45, 85, 0.15);
+    padding: 8px 0 12px;
+}
+
+.bottom-nav-container {
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    font-size: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+.bottom-nav-item i {
+    font-size: 20px;
+}
+
+.bottom-nav-item.active {
+    color: #ff2d55;
+}
+
+.bottom-nav-item:hover {
+    color: #ff2d55;
+}
+
+/* Mobile tap highlight fix for bottom nav */
+.bottom-nav-item:active {
+    background-color: transparent !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Admin logout */
+.admin-logout-form {
+    display: inline;
+}
+.admin-logout-btn {
+    background: none;
+    border: none;
+    color: #ff2d55;
+    text-decoration: none;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* ===================== ERROR PAGES ===================== */
+.error-page {
+    text-align: center;
+    padding-top: 100px;
+}
+.error-icon {
+    font-size: 80px;
+}
+.error-title {
+    font-size: 48px;
+}
+.error-desc {
+    opacity: 0.7;
+    margin: 20px 0;
+}
+.error-btn {
+    max-width: 200px;
+    margin: 0 auto;
+}

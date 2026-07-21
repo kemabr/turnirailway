@@ -226,6 +226,15 @@
         .bottom-nav-item.active {
             color: #ff2d55;
         }
+        /* Mobile tap highlight fix */
+        .auth-tab, .auth-input-group input, .auth-submit-btn, .bottom-nav-item, button, a {
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-touch-callout: none !important;
+        }
+        .auth-tab:active, .auth-input-group input:active, .auth-submit-btn:active, .bottom-nav-item:active, button:active, a:active {
+            background-color: transparent !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
     </style>
 </head>
 <body>
@@ -360,4 +369,5 @@
         });
     </script>
 </body>
-</html>
+    </html>
+                

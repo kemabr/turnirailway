@@ -214,6 +214,41 @@
         .nav-btn-hidden {
             display: none !important;
         }
+        /* ÜÝTGETME: Lobi habar toast */
+        .toast-notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: linear-gradient(135deg, rgba(255, 45, 85, 0.9), rgba(255, 107, 53, 0.9));
+            color: white;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 30px rgba(255, 45, 85, 0.4);
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        /* ÜÝTGETME: Turnir maglumatlary boş wagty */
+        .no-tournament-info {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.6;
+        }
+        .no-tournament-info i {
+            font-size: 48px;
+            color: #ff2d55;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
 </style></head>
 <body>
     <div class="bg-animation">
@@ -222,6 +257,11 @@
         <div class="particle"></div>
         <div class="particle"></div>
         <div class="particle"></div>
+    </div>
+
+    <!-- ÜÝTGETME: Toast habar -->
+    <div class="toast-notification" id="lobi-toast">
+        <i class="fas fa-info-circle"></i> Siz entek turnira gatnaşmadynyz!
     </div>
 
     <header class="top-nav">
@@ -255,7 +295,8 @@
                 <div class="counter-left">
                     <span class="counter-label">GATNASYJY SANY</span>
                     <div class="counter-value">
-                        <span id="current-count">{{ stats.toplam }}</span>
+                        <!-- ÜÝTGETME: Diňe tassyklananlar sanalýar -->
+                        <span id="current-count">{{ stats.onaylanan }}</span>
                         <span class="counter-total">/ {{ stats.yer_sany }}</span>
                     </div>
                 </div>
@@ -265,10 +306,11 @@
                 </div>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar" id="progress-bar" style="width: {{ (stats.toplam / stats.yer_sany * 100) if stats.yer_sany > 0 else 0 }}%"></div>
+                <!-- ÜÝTGETME: Progress tassyklananlara görä -->
+                <div class="progress-bar" id="progress-bar" style="width: {{ (stats.onaylanan / stats.yer_sany * 100) if stats.yer_sany > 0 else 0 }}%"></div>
             </div>
             <div class="counter-alert" id="counter-alert">
-                {% if stats.yer_sany > 0 and stats.toplam >= stats.yer_sany %}
+                {% if stats.yer_sany > 0 and stats.onaylanan >= stats.yer_sany %}
                     TURNIR BASLADY! Ahli yerler doldu!
                 {% elif stats.yer_sany > 0 %}
                     {{ stats.yer_sany }} gatnasyja yetende turnir baslar! Galan: {{ stats.galan }} yer
@@ -281,7 +323,8 @@
         <section class="categories-section">
             <h2 class="section-title">KATEGORIYALAR</h2>
             <div class="categories-grid">
-                <button class="category-card" onclick="window.location.href='/turnir'" type="button">
+                <!-- ÜÝTGETME: Lobi Gur - gatnaşyk barlamak -->
+                <button class="category-card" onclick="checkLobiAccess()" type="button">
                     <div class="category-icon"><i class="fas fa-users"></i></div>
                     <div class="category-info"><h3>Lobi Gur</h3><p>Dostlaryn bilen lobi gur</p></div>
                     <span class="category-arrow"><i class="fas fa-chevron-right"></i></span>
@@ -303,33 +346,123 @@
                 </button>
             </div>
         </section>
-
+        
+                <!-- ÜÝTGETME: Turnir Maglumatlary - ulanyjynyň gatnaşan turnirine görä -->
         <section class="info-section" id="section-turnir" style="display:none;">
             <h2 class="section-title">TURNIR MAGLUMATLARY</h2>
-            <div class="info-list">
-                <div class="info-item"><span class="info-icon"><i class="fas fa-calendar"></i></span><div class="info-content"><span class="info-label">Senesi</span><span class="info-value">{{ turnir.senesi }}</span></div></div>
-                <div class="info-item"><span class="info-icon"><i class="fas fa-clock"></i></span><div class="info-content"><span class="info-label">Wagty</span><span class="info-value">{{ turnir.wagty }}</span></div></div>
-                <div class="info-item"><span class="info-icon"><i class="fas fa-map"></i></span><div class="info-content"><span class="info-label">Karta</span><span class="info-value">{{ turnir.karta }}</span></div></div>
-                <div class="info-item"><span class="info-icon"><i class="fas fa-user"></i></span><div class="info-content"><span class="info-label">Lobi sany</span><span class="info-value">{{ turnir.gatnasym }}</span></div></div>
-                <div class="info-item"><span class="info-icon"><i class="fas fa-money-bill-wave"></i></span><div class="info-content"><span class="info-label">Toleg</span><span class="info-value highlight">{{ turnir.tolek }}</span></div></div>
-                <div class="info-item"><span class="info-icon"><i class="fas fa-mobile-alt"></i></span><div class="info-content"><span class="info-label">Toleg usuly</span><span class="info-value">{{ turnir.tolek_usuly }}</span></div></div>
-            </div>
+            
+            {% if user_turnir_id %}
+                <!-- Ulanyjy gatnaşan turnir bar -->
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-trophy"></i></span>
+                        <div class="info-content">
+                            <span class="info-label">Turnir</span>
+                            <span class="info-value">{{ turnir.ad }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-calendar"></i></span>
+                        <div class="info-content">
+                            <span class="info-label">Senesi</span>
+                            <span class="info-value">{{ turnir.senesi }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-clock"></i></span>
+                        <div class="info-content">
+                            <span class="info-label">Wagty</span>
+                            <span class="info-value">{{ turnir.wagty }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-map"></i></span>
+                        <div class="info-content">
+                            <span class="info-label">Karta</span>
+                            <span class="info-value">{{ turnir.karta }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-user"></i></span>
+                        <div class="info-content">
+                            <span class="info-label">Gatnaşyk</span>
+                            <span class="info-value">{{ turnir.gatnasym }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-money-bill-wave"></i></span>
+                        <div class="info-content">
+                            <span class="info-label">Toleg</span>
+                            <span class="info-value highlight">{{ turnir.tolek }}</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon"><i class="fas fa-mobile-alt"></i></span>
+                        <div class="info-content">
+                            <span class="info-label">Toleg usuly</span>
+                            <span class="info-value">{{ turnir.tolek_usuly }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Ulanyjy entek gatnaşmadyk -->
+                <div class="no-tournament-info">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>Siz entek haýsydyr bir turnira gatnaşmadynyz.</p>
+                    <p>Turnirler bölüminden gatnaşmak isleýän turniriňizi saýlaň!</p>
+                    <a href="/turnir" class="btn-primary" style="margin-top: 20px; display: inline-block; width: auto; padding: 14px 32px;">
+                        <i class="fas fa-trophy"></i> TURNIRLERI GORMEK
+                    </a>
+                </div>
+            {% endif %}
         </section>
 
+        <!-- ÜÝTGETME: Bayraklar - ulanyjynyň gatnaşan turnirine görä -->
         <section class="prizes-section" id="section-bayrak" style="display:none;">
             <h2 class="section-title">BAYRAKLAR</h2>
-            <div class="prizes-grid">
-                <div class="prize-card gold"><div class="prize-rank"><i class="fas fa-medal" style="color:#ffd700"></i></div><div class="prize-info"><h3>1-nji Orun</h3><p class="prize-amount">{{ bayraklar.bir.mukdar }}</p><p class="prize-bonus">{{ bayraklar.bir.bonus }}</p></div></div>
-                <div class="prize-card silver"><div class="prize-rank"><i class="fas fa-medal" style="color:#c0c0c0"></i></div><div class="prize-info"><h3>2-nji Orun</h3><p class="prize-amount">{{ bayraklar.iki.mukdar }}</p></div></div>
-                <div class="prize-card bronze"><div class="prize-rank"><i class="fas fa-medal" style="color:#cd7f32"></i></div><div class="prize-info"><h3>3-nji Orun</h3><p class="prize-amount">{{ bayraklar.uc.mukdar }}</p></div></div>
-            </div>
-            <div class="prize-total"><span>JEMI BAYRAK:</span><strong>{{ bayraklar.jemi }}</strong></div>
+            
+            {% if user_turnir_id %}
+                <div class="prizes-grid">
+                    <div class="prize-card gold">
+                        <div class="prize-rank"><i class="fas fa-medal" style="color:#ffd700"></i></div>
+                        <div class="prize-info">
+                            <h3>1-nji Orun</h3>
+                            <p class="prize-amount">{{ bayraklar.bir.mukdar }}</p>
+                            <p class="prize-bonus">{{ bayraklar.bir.bonus }}</p>
+                        </div>
+                    </div>
+                    <div class="prize-card silver">
+                        <div class="prize-rank"><i class="fas fa-medal" style="color:#c0c0c0"></i></div>
+                        <div class="prize-info">
+                            <h3>2-nji Orun</h3>
+                            <p class="prize-amount">{{ bayraklar.iki.mukdar }}</p>
+                        </div>
+                    </div>
+                    <div class="prize-card bronze">
+                        <div class="prize-rank"><i class="fas fa-medal" style="color:#cd7f32"></i></div>
+                        <div class="prize-info">
+                            <h3>3-nji Orun</h3>
+                            <p class="prize-amount">{{ bayraklar.uc.mukdar }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="prize-total">
+                    <span>JEMI BAYRAK:</span>
+                    <strong>{{ bayraklar.jemi }}</strong>
+                </div>
+            {% else %}
+                <div class="no-tournament-info">
+                    <i class="fas fa-trophy"></i>
+                    <p>Bayraklar gatnaşan turniriňize görä görkeziler.</p>
+                    <p>Ilki bilen bir turnira gatnaşyň!</p>
+                </div>
+            {% endif %}
         </section>
 
         <section class="rules-section" id="section-duzgun" style="display:none;">
             <h2 class="section-title">DUZGUNLER</h2>
             <div class="rules-list">
-                <div class="rule-item"><span class="rule-number">1</span><p>Gatnasyk tolegi {{ turnir.tolek }} (TMCell 0804 arkaly)</p></div>
+                <div class="rule-item"><span class="rule-number">1</span><p>Gatnasyk tolegi {{ turnir.tolek or '5 Manat' }} (TMCell 0804 arkaly)</p></div>
                 <div class="rule-item"><span class="rule-number">2</span><p>Her topar 4 kisiden ybarat bolmaly</p></div>
                 <div class="rule-item"><span class="rule-number">3</span><p>Emulator we mobil oyuncylar ayratyn kategoriyada</p></div>
                 <div class="rule-item"><span class="rule-number">4</span><p>Hile we 3-nji tarap programmalar gadagan</p></div>
@@ -432,6 +565,7 @@
     <script>
         let csrfToken = '';
         let isUserLoggedIn = false;
+        let userTurnirId = {{ user_turnir_id|tojson|default('null') }};
 
         async function getCsrfToken() {
             try {
@@ -495,7 +629,6 @@
 
             if (!btnKayit || !btnProfil) return;
 
-            // Remove hidden class first (from initial load)
             btnKayit.classList.remove('nav-btn-hidden');
             btnProfil.classList.remove('nav-btn-hidden');
 
@@ -518,6 +651,7 @@
                     const result = await response.json();
                     if (result.success && result.katilimci) {
                         isUserLoggedIn = true;
+                        userTurnirId = result.katilimci.turnir_id || null;
                         updateNavButtons();
                         return true;
                     }
@@ -533,6 +667,25 @@
                 updateNavButtons();
                 return false;
             }
+        }
+
+        // ÜÝTGETME: Lobi Gur - gatnaşyk barlamak
+        function checkLobiAccess() {
+            if (!isUserLoggedIn) {
+                openAuthModal();
+                return;
+            }
+            if (!userTurnirId) {
+                // Toast habar çykarmak
+                const toast = document.getElementById('lobi-toast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+                return;
+            }
+            // Gatnaşyk bar - lobi sahypasyna git
+            window.location.href = '/takim';
         }
 
         function showSection(section) {
@@ -585,15 +738,11 @@
                         const result = await response.json();
                         if (result.success) {
                             isUserLoggedIn = true;
+                            await checkLoginStatus(); // turnir_id update etmek
                             updateNavButtons();
                             closeAuthModal();
-                            // Stay on index page, show success
-                            const loginError = document.getElementById('login-error');
-                            if (loginError) {
-                                loginError.textContent = 'Ustunlikli registrasiya! Hoş geldiňiz!';
-                                loginError.style.color = '#00c853';
-                                loginError.classList.add('show');
-                            }
+                            // Sahypany tazelemek (turnir maglumatlaryny çykarmak üçin)
+                            window.location.reload();
                         } else {
                             errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
                             errorEl.classList.add('show');
@@ -622,73 +771,4 @@
                     const btn = document.getElementById('register-submit-btn');
 
                     if (!ad || !telefon || !parol) {
-                        errorEl.textContent = 'Ahli maglumatlary dolduryň!';
-                        errorEl.classList.add('show');
-                        return;
-                    }
-                    if (ad.length < 2) {
-                        errorEl.textContent = 'Ad 2 harpdan uly bolmaly!';
-                        errorEl.classList.add('show');
-                        return;
-                    }
-                    if (parol.length < 6) {
-                        errorEl.textContent = 'Parol 6 harpdan uly bolmaly!';
-                        errorEl.classList.add('show');
-                        return;
-                    }
-                    if (parol !== parol_tekrar) {
-                        errorEl.textContent = 'Parollar deň däl!';
-                        errorEl.classList.add('show');
-                        return;
-                    }
-                    const telClean = telefon.replace(/\s/g, '').replace(/-/g, '').replace(/\+/g, '');
-                    if (!/^\d{8}$/.test(telClean) && !/^993\d{8}$/.test(telClean)) {
-                        errorEl.textContent = 'Telefon belgisi nadogry! Format: +993 XX XXX XXX ya-da 8 san';
-                        errorEl.classList.add('show');
-                        return;
-                    }
-                    if (!csrfToken) {
-                        errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
-                        errorEl.classList.add('show');
-                        await getCsrfToken();
-                        return;
-                    }
-                    btn.disabled = true;
-                    errorEl.classList.remove('show');
-                    try {
-                        const response = await fetch('/api/kayit-ol', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ad, telefon, parol, parol_tekrar, csrf_token: csrfToken }),
-                            credentials: 'same-origin'
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            isUserLoggedIn = true;
-                            updateNavButtons();
-                            closeAuthModal();
-                            // Stay on index page, show success
-                            const loginError = document.getElementById('login-error');
-                            if (loginError) {
-                                loginError.textContent = 'Ustunlikli registrasiya! Hoş geldiňiz!';
-                                loginError.style.color = '#00c853';
-                                loginError.classList.add('show');
-                            }
-                        } else {
-                            errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
-                            errorEl.classList.add('show');
-                            await getCsrfToken();
-                        }
-                    } catch (error) {
-                        errorEl.textContent = 'Yalnyslyk: ' + error.message;
-                        errorEl.classList.add('show');
-                        await getCsrfToken();
-                    } finally {
-                        btn.disabled = false;
-                    }
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+                        errorEl.textConten

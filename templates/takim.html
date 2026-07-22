@@ -7,6 +7,87 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .pending-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .pending-icon {
+            font-size: 80px;
+            color: #ff8c00;
+            margin-bottom: 24px;
+            filter: drop-shadow(0 0 20px rgba(255, 140, 0, 0.4));
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .pending-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            color: #ff8c00;
+            margin-bottom: 12px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px rgba(255, 140, 0, 0.3);
+        }
+        .pending-text {
+            font-size: 16px;
+            opacity: 0.8;
+            color: #c0c0d0;
+            margin-bottom: 8px;
+        }
+        .pending-subtext {
+            font-size: 13px;
+            opacity: 0.5;
+            color: #a0a0c0;
+            margin-bottom: 28px;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 45, 85, 0.15);
+            padding: 8px 0 12px;
+        }
+        .bottom-nav-container {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            font-size: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        .bottom-nav-item i {
+            font-size: 20px;
+        }
+        .bottom-nav-item.active {
+            color: #ff2d55;
+        }
+    </style>
 </head>
 <body>
     <div class="bg-animation">
@@ -17,6 +98,27 @@
         <div class="particle"></div>
     </div>
 
+    <!-- ÜÝTGETME: Tassyklama barlamak -->
+    {% if katilimci['admin_onay'] != 1 %}
+    
+    <!-- Tassyklanmadyk ulanyjy üçin -->
+    <div class="container main-content pending-screen" style="padding-bottom: 80px;">
+        <div>
+            <div class="pending-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <h2 class="pending-title">GARASYLYAR</h2>
+            <p class="pending-text">Admin tassyklamasy garasylyar.</p>
+            <p class="pending-subtext">Tassyklanyndan soň topar gurup bilersiňiz.</p>
+            <a href="/profil" class="btn-primary" style="display: inline-block; width: auto; padding: 16px 40px;">
+                <i class="fas fa-user"></i> PROFILIME GIT
+            </a>
+        </div>
+    </div>
+
+    {% else %}
+    
+    <!-- Tassyklanan ulanyjy üçin - öňki kod -->
     <div class="container main-content" style="padding-bottom: 80px;">
         <header class="form-header">
             <a href="/profil" class="back-btn"><i class="fas fa-arrow-left"></i> Yza</a>
@@ -74,6 +176,30 @@
             <a href="/profil" class="btn-primary">Profilime Git</a>
         </div>
     </div>
+
+    {% endif %}
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-container">
+            <a href="/" class="bottom-nav-item">
+                <i class="fas fa-home"></i>
+                <span>Esasy</span>
+            </a>
+            <a href="/turnir" class="bottom-nav-item">
+                <i class="fas fa-trophy"></i>
+                <span>Turnir</span>
+            </a>
+            <a href="/magazyn" class="bottom-nav-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Magazyn</span>
+            </a>
+            <a href="/menyu" class="bottom-nav-item">
+                <i class="fas fa-bars"></i>
+                <span>Menýu</span>
+            </a>
+        </div>
+    </nav>
 
     <script>
         let csrfToken = '';
@@ -201,26 +327,5 @@
             }
         });
     </script>
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <div class="bottom-nav-container">
-            <a href="/" class="bottom-nav-item">
-                <i class="fas fa-home"></i>
-                <span>Esasy</span>
-            </a>
-            <a href="/turnir" class="bottom-nav-item">
-                <i class="fas fa-trophy"></i>
-                <span>Turnir</span>
-            </a>
-            <a href="/magazyn" class="bottom-nav-item">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Magazyn</span>
-            </a>
-            <a href="/menyu" class="bottom-nav-item">
-                <i class="fas fa-bars"></i>
-                <span>Menýu</span>
-            </a>
-        </div>
-    </nav>
 </body>
 </html>

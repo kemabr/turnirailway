@@ -263,15 +263,24 @@ def validate_csrf_token(token):
 
 def send_telegram_message(message):
     if not CLOUDFLARE_WORKER_URL:
+        logger.warning("CLOUDFLARE_WORKER_URL bosh!")
         return False
+    
+    url = f"{CLOUDFLARE_WORKER_URL}/send-message"
+    logger.info(f"Telegram URL: {url}")
+    logger.info(f"Message: {message[:100]}")  # Ilki 100 harp
+    
     try:
         response = requests.post(
-            f"{CLOUDFLARE_WORKER_URL}/send-message",
+            url,
             json={'message': message},
             timeout=15
         )
+        logger.info(f"Status: {response.status_code}")
+        logger.info(f"Response: {response.text[:500]}")
         return response.status_code == 200
-    except requests.RequestException:
+    except requests.RequestException as e:
+        logger.error(f"Telegram error: {e}")
         return False
 
 # ÜÝTGETME 1: Diňe tassyklanan gatnaşyjylary sanamak

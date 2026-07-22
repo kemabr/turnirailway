@@ -67,6 +67,12 @@
             border: 1px solid rgba(255, 255, 255, 0.06);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s;
+        }
+        .tournament-card:hover {
+            border-color: rgba(255, 45, 85, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 45, 85, 0.1);
         }
         .tournament-card::before {
             content: '';
@@ -113,14 +119,18 @@
             padding: 12px 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .tournament-meta span {
             font-size: 12px;
             opacity: 0.7;
             color: #a0a0c0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .tournament-meta span i {
-            margin-right: 6px;
             color: #ff2d55;
         }
         .btn-join-tournament {
@@ -153,6 +163,11 @@
         .btn-waiting {
             background: linear-gradient(135deg, #ff8c00, #ff6b35) !important;
             box-shadow: 0 8px 30px rgba(255, 140, 0, 0.4) !important;
+        }
+        .btn-full {
+            background: linear-gradient(135deg, #6b7280, #4b5563) !important;
+            box-shadow: none !important;
+            cursor: not-allowed !important;
         }
 
         /* Tournament tabs */
@@ -223,8 +238,55 @@
         .mode-btn i {
             font-size: 14px;
         }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-state i {
+            font-size: 64px;
+            color: #ff2d55;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        .empty-state h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: #ff2d55;
+            margin-bottom: 10px;
+        }
+        .empty-state p {
+            opacity: 0.6;
+            font-size: 14px;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-upcoming {
+            background: rgba(0, 200, 83, 0.15);
+            color: #00c853;
+            border: 1px solid rgba(0, 200, 83, 0.3);
+        }
+        .status-current {
+            background: rgba(255, 140, 0, 0.15);
+            color: #ff8c00;
+            border: 1px solid rgba(255, 140, 0, 0.3);
+        }
+        .status-past {
+            background: rgba(107, 114, 128, 0.15);
+            color: #9ca3af;
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
     </style>
-<base target="_blank">
 </head>
 <body>
     <div class="bg-animation">
@@ -243,7 +305,8 @@
 
         <!-- Tournament Tabs -->
         <div class="tournament-tabs">
-            <button class="tournament-tab active" onclick="filterTournaments('upcoming', this)" type="button">Gelejek</button>
+            <button class="tournament-tab active" onclick="filterTournaments('all', this)" type="button">Hemme</button>
+            <button class="tournament-tab" onclick="filterTournaments('upcoming', this)" type="button">Gelejek</button>
             <button class="tournament-tab" onclick="filterTournaments('current', this)" type="button">Häzirki</button>
             <button class="tournament-tab" onclick="filterTournaments('past', this)" type="button">Geçen</button>
         </div>
@@ -256,71 +319,49 @@
             <button class="mode-btn" onclick="filterMode('squad', this)" type="button"><i class="fas fa-users"></i> Squad</button>
         </div>
 
-        <!-- Tournament List -->
+        <!-- Tournament List - Dinamik -->
         <div class="tournament-list" id="tournament-list">
-            <!-- Tournament 1 -->
-            <div class="tournament-card" data-status="upcoming" data-mode="squad">
-                <div class="tournament-header">
-                    <div class="tournament-info">
-                        <h3>PUBG MOBILE SQUAD</h3>
-                        <p>Weekend Premium Cup #58</p>
+            {% if turnirler %}
+                {% for t in turnirler %}
+                <div class="tournament-card" data-status="{{ t.status }}" data-mode="{{ t.mode }}">
+                    <div class="tournament-header">
+                        <div class="tournament-info">
+                            <h3>{{ t.ad }}</h3>
+                            <p>
+                                <span class="status-badge status-{{ t.status }}">{{ t.status }}</span>
+                            </p>
+                        </div>
+                        <div class="tournament-prize">{{ t.bayrak_jemi }}</div>
                     </div>
-                    <div class="tournament-prize">500 M</div>
-                </div>
-                <div class="tournament-meta">
-                    <span><i class="fas fa-calendar"></i> 25 Iýul 2026</span>
-                    <span><i class="fas fa-clock"></i> 20:00</span>
-                    <span><i class="fas fa-users"></i> 2/100</span>
-                    <span><i class="fas fa-gamepad"></i> 4 VS 4</span>
-                </div>
-                <button class="btn-join-tournament" onclick="joinTournament('pubg-squad-58')" type="button">
-                    TURNIRA GOŞUL
-                </button>
-            </div>
-
-            <!-- Tournament 2 -->
-            <div class="tournament-card" data-status="upcoming" data-mode="solo">
-                <div class="tournament-header">
-                    <div class="tournament-info">
-                        <h3>PUBG MOBILE SOLO</h3>
-                        <p>Individual Championship #12</p>
+                    <div class="tournament-meta">
+                        <span><i class="fas fa-calendar"></i> {{ t.senesi }}</span>
+                        <span><i class="fas fa-clock"></i> {{ t.wagty }}</span>
+                        <span><i class="fas fa-users"></i> {{ t.onaylanan }}/{{ t.yer_sany }}</span>
+                        <span><i class="fas fa-gamepad"></i> {{ t.gatnasym }}</span>
                     </div>
-                    <div class="tournament-prize">300 M</div>
+                    
+                    {% if t.onaylanan >= t.yer_sany %}
+                        <button class="btn-join-tournament btn-full" type="button" disabled>
+                            <i class="fas fa-lock"></i> YERLER DOLDY
+                        </button>
+                    {% else %}
+                        <button class="btn-join-tournament" onclick="joinTournament({{ t.id }})" type="button">
+                            <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
+                        </button>
+                    {% endif %}
                 </div>
-                <div class="tournament-meta">
-                    <span><i class="fas fa-calendar"></i> 26 Iýul 2026</span>
-                    <span><i class="fas fa-clock"></i> 18:00</span>
-                    <span><i class="fas fa-users"></i> 15/50</span>
-                    <span><i class="fas fa-gamepad"></i> 1 VS 1</span>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>Turnir Ýok</h3>
+                    <p>Häzirki wagtda elýeterli turnir ýok.</p>
                 </div>
-                <button class="btn-join-tournament" onclick="joinTournament('pubg-solo-12')" type="button">
-                    TURNIRA GOŞUL
-                </button>
-            </div>
-
-            <!-- Tournament 3 -->
-            <div class="tournament-card" data-status="upcoming" data-mode="duo">
-                <div class="tournament-header">
-                    <div class="tournament-info">
-                        <h3>PUBG MOBILE DUO</h3>
-                        <p>Partner Challenge #24</p>
-                    </div>
-                    <div class="tournament-prize">200 M</div>
-                </div>
-                <div class="tournament-meta">
-                    <span><i class="fas fa-calendar"></i> 27 Iýul 2026</span>
-                    <span><i class="fas fa-clock"></i> 19:00</span>
-                    <span><i class="fas fa-users"></i> 8/64</span>
-                    <span><i class="fas fa-gamepad"></i> 2 VS 2</span>
-                </div>
-                <button class="btn-join-tournament" onclick="joinTournament('pubg-duo-24')" type="button">
-                    TURNIRA GOŞUL
-                </button>
-            </div>
+            {% endif %}
         </div>
     </div>
-
-    <!-- Bottom Navigation -->
+    
+        <!-- Bottom Navigation -->
     <nav class="bottom-nav">
         <div class="bottom-nav-container">
             <a href="/" class="bottom-nav-item">
@@ -373,14 +414,14 @@
         // Check on page load
         checkLoginStatus();
 
-        async function joinTournament(tournamentId) {
+        async function joinTournament(turnirId) {
             await checkLoginStatus();
 
             if (!isUserLoggedIn) {
                 window.location.href = '/login?redirect=/turnir';
                 return;
             }
-            window.location.href = '/turnir/gosul?id=' + tournamentId;
+            window.location.href = '/turnir/gosul?id=' + turnirId;
         }
 
         function filterTournaments(status, btn) {
@@ -394,6 +435,9 @@
                     card.style.display = 'none';
                 }
             });
+            
+            // Eger görünýän karty ýok bolsa, empty state görkez
+            checkEmptyState();
         }
 
         function filterMode(mode, btn) {
@@ -407,6 +451,28 @@
                     card.style.display = 'none';
                 }
             });
+            
+            checkEmptyState();
+        }
+
+        function checkEmptyState() {
+            const visibleCards = document.querySelectorAll('.tournament-card[style*="block"]');
+            const list = document.getElementById('tournament-list');
+            
+            // Bar bolan empty state-ni pozmak
+            const existingEmpty = list.querySelector('.empty-state');
+            if (existingEmpty) existingEmpty.remove();
+            
+            if (visibleCards.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-state';
+                emptyDiv.innerHTML = `
+                    <i class="fas fa-filter"></i>
+                    <h3>Netije Ýok</h3>
+                    <p>Saýlanan kriteriýalara laýyk turnir ýok.</p>
+                `;
+                list.appendChild(emptyDiv);
+            }
         }
     </script>
 </body>

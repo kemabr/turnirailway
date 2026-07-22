@@ -586,7 +586,14 @@
                         if (result.success) {
                             isUserLoggedIn = true;
                             updateNavButtons();
-                            window.location.href = '/profil';
+                            closeAuthModal();
+                            // Stay on index page, show success
+                            const loginError = document.getElementById('login-error');
+                            if (loginError) {
+                                loginError.textContent = 'Ustunlikli registrasiya! Hoş geldiňiz!';
+                                loginError.style.color = '#00c853';
+                                loginError.classList.add('show');
+                            }
                         } else {
                             errorEl.textContent = result.message || 'Telefon ya-da parol nadogry!';
                             errorEl.classList.add('show');
@@ -659,7 +666,14 @@
                         if (result.success) {
                             isUserLoggedIn = true;
                             updateNavButtons();
-                            window.location.href = '/profil';
+                            closeAuthModal();
+                            // Stay on index page, show success
+                            const loginError = document.getElementById('login-error');
+                            if (loginError) {
+                                loginError.textContent = 'Ustunlikli registrasiya! Hoş geldiňiz!';
+                                loginError.style.color = '#00c853';
+                                loginError.classList.add('show');
+                            }
                         } else {
                             errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
                             errorEl.classList.add('show');

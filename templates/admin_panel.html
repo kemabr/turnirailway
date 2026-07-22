@@ -8,6 +8,138 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Turnir sanawy */
+        .turnir-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .turnir-admin-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s;
+        }
+        .turnir-admin-card:hover {
+            border-color: rgba(255, 45, 85, 0.2);
+        }
+        .turnir-admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .turnir-admin-header h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+        .turnir-admin-header .status-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .turnir-admin-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .turnir-admin-info p {
+            font-size: 12px;
+            opacity: 0.7;
+            color: #a0a0c0;
+        }
+        .turnir-admin-info p strong {
+            color: #ff8c00;
+        }
+        .turnir-admin-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-edit {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 150, 255, 0.15);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 10px;
+            color: #0096ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-edit:hover {
+            background: rgba(0, 150, 255, 0.25);
+        }
+        .btn-delete-turnir {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255, 45, 85, 0.15);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+            border-radius: 10px;
+            color: #ff2d55;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-delete-turnir:hover {
+            background: rgba(255, 45, 85, 0.25);
+        }
+        /* Modal */
+        .admin-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .admin-modal.active {
+            display: flex;
+        }
+        .admin-modal-content {
+            background: linear-gradient(135deg, #12121a, #0d0d15);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 45, 85, 0.2);
+        }
+        .admin-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .admin-modal-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: #ff2d55;
+        }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <div class="bg-animation">
@@ -22,8 +154,8 @@
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h1>Admin Panel</h1>
                 <form action="/admin/logout" method="POST" class="admin-logout-form">
-    <button type="submit" class="admin-logout-btn">Cykys</button>
-</form>
+                    <button type="submit" class="admin-logout-btn">Cykys</button>
+                </form>
             </div>
             <div class="admin-stats">
                 <div class="stat-box"><span>Toplam</span><strong>{{ stats.toplam }}</strong></div>
@@ -32,56 +164,77 @@
             </div>
         </header>
 
-        <!-- 3 ÇYZYKLY KATEGORIÝA -->
+        <!-- 4 ÇYZYKLY KATEGORIÝA -->
         <div class="admin-tabs">
-            <button class="admin-tab-btn active" onclick="showAdminTab('turnir', this)" type="button"><i class="fas fa-calendar-alt"></i> Turnir Maglumatlary</button>
+            <button class="admin-tab-btn active" onclick="showAdminTab('turnir', this)" type="button"><i class="fas fa-calendar-alt"></i> Turnirler</button>
             <button class="admin-tab-btn" onclick="showAdminTab('katilimci', this)" type="button"><i class="fas fa-users"></i> Katylymcylar</button>
             <button class="admin-tab-btn" onclick="showAdminTab('topar', this)" type="button"><i class="fas fa-trophy"></i> Toparlar</button>
         </div>
 
-        <!-- TAB 1: TURNIR MAGLUMATLARY -->
+        <!-- TAB 1: TURNIRLER (TÄZE) -->
         <div id="tab-turnir" class="admin-tab-content active">
             <section class="admin-section">
-                <h2>Turnir Maglumatlary</h2>
-                <div class="ayar-form">
-                    <div class="ayar-group"><label>Senesi</label><input type="text" id="ayar-senesi" value="{{ turnir.senesi }}"></div>
-                    <div class="ayar-group"><label>Wagty</label><input type="text" id="ayar-wagty" value="{{ turnir.wagty }}"></div>
-                    <div class="ayar-group"><label>Karta</label><input type="text" id="ayar-karta" value="{{ turnir.karta }}"></div>
-                    <div class="ayar-group"><label>Gatnasik</label><input type="text" id="ayar-gatnasym" value="{{ turnir.gatnasym }}"></div>
-                    <div class="ayar-group"><label>Toleg</label><input type="text" id="ayar-tolek" value="{{ turnir.tolek }}"></div>
-                    <div class="ayar-group"><label>Toleg Usuly</label><input type="text" id="ayar-tolek-usuly" value="{{ turnir.tolek_usuly }}"></div>
-                    <div class="ayar-group"><label>Yer Sany</label><input type="number" id="ayar-yer-sany" value="{{ stats.yer_sany }}" min="1" max="10000"></div>
-                    <button class="btn-submit" onclick="saveAyarlar()" type="button" style="margin-top:10px;">Maglumatlary Sakla</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+                    <h2>Turnirler ({{ turnirler|length }})</h2>
+                    <button class="btn-submit" onclick="openTurnirModal()" type="button" style="width:auto; padding:12px 24px; font-size:12px;">
+                        <i class="fas fa-plus"></i> TÄZE TURNIR
+                    </button>
                 </div>
-            </section>
 
-            <section class="admin-section">
-                <h2>Bayraklar</h2>
-                <div class="ayar-form">
-                    <div class="ayar-group"><label>1-nji Orun</label><input type="text" id="ayar-b1" value="{{ bayraklar.bir.mukdar }}"></div>
-                    <div class="ayar-group"><label>1-nji Orun Bonus</label><input type="text" id="ayar-b1-bonus" value="{{ bayraklar.bir.bonus }}"></div>
-                    <div class="ayar-group"><label>2-nji Orun</label><input type="text" id="ayar-b2" value="{{ bayraklar.iki.mukdar }}"></div>
-                    <div class="ayar-group"><label>3-nji Orun</label><input type="text" id="ayar-b3" value="{{ bayraklar.uc.mukdar }}"></div>
-                    <div class="ayar-group"><label>Jemi Bayrak</label><input type="text" id="ayar-bjemi" value="{{ bayraklar.jemi }}"></div>
-                    <button class="btn-submit" onclick="saveBayraklar()" type="button" style="margin-top:10px;">Bayraklary Sakla</button>
+                {% if turnirler %}
+                <div class="turnir-list">
+                    {% for t in turnirler %}
+                    <div class="turnir-admin-card">
+                        <div class="turnir-admin-header">
+                            <h4>{{ t.ad }}</h4>
+                            <span class="status-badge status-{{ t.status }}">{{ t.status }}</span>
+                        </div>
+                        <div class="turnir-admin-info">
+                            <p><strong>Sene:</strong> {{ t.senesi }}</p>
+                            <p><strong>Wagt:</strong> {{ t.wagty }}</p>
+                            <p><strong>Karta:</strong> {{ t.karta }}</p>
+                            <p><strong>Mode:</strong> {{ t.mode }}</p>
+                            <p><strong>Toleg:</strong> {{ t.tolek }}</p>
+                            <p><strong>Yer:</strong> {{ t.onaylanan }}/{{ t.yer_sany }}</p>
+                        </div>
+                        <div class="turnir-admin-actions">
+                            <button class="btn-edit" onclick="editTurnir({{ t.id }})" type="button">
+                                <i class="fas fa-edit"></i> Üýtget
+                            </button>
+                            <button class="btn-delete-turnir" onclick="deleteTurnir({{ t.id }}, '{{ t.ad }}')" type="button">
+                                <i class="fas fa-trash"></i> Poz
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <p style="text-align:center; opacity:0.6; padding:40px 0;">Häzirki wagtda turnir ýok.</p>
+                {% endif %}
             </section>
         </div>
-
-        <!-- TAB 2: KATYLYMCYLAR -->
+        
+                <!-- TAB 2: KATYLYMCYLAR -->
         <div id="tab-katilimci" class="admin-tab-content">
             <section class="admin-section">
                 <h2>Katylymcylar ({{ katilimcilar|length }})</h2>
                 <div class="table-responsive">
                     <table class="admin-table">
-                        <thead><tr><th>Ref. Kod</th><th>Ad</th><th>PUBG ID</th><th>Telefon</th><th>Toleg</th><th>Onay</th><th>Islem</th></tr></thead>
+                        <thead><tr><th>Ref. Kod</th><th>Ad</th><th>PUBG ID</th><th>Telefon</th><th>Turnir</th><th>Toleg</th><th>Onay</th><th>Islem</th></tr></thead>
                         <tbody>
                             {% for k in katilimcilar %}
                             <tr>
                                 <td><code>{{ k['referans_kodu'] }}</code></td>
                                 <td>{{ k['ad'] }}</td>
-                                <td>{{ k['pubg_id'] }}</td>
+                                <td>{{ k['pubg_id'] or '-' }}</td>
                                 <td>{{ k['telefon'] }}</td>
+                                <td>
+                                    {% if k['turnir_id'] %}
+                                        {% for t in turnirler %}
+                                            {% if t.id == k['turnir_id'] %}{{ t.ad }}{% endif %}
+                                        {% endfor %}
+                                    {% else %}-{% endif %}
+                                </td>
                                 <td>{% if k['odeme_durumu'] == 1 %}<i class="fas fa-check-circle" style="color:#00c853"></i>{% else %}<i class="fas fa-times-circle" style="color:#ff2d55"></i>{% endif %}</td>
                                 <td>
                                     {% if k['admin_onay'] == 0 %}Garasyl yar
@@ -125,6 +278,87 @@
         </div>
     </div>
 
+    <!-- TÄZE TURNIR / ÜÝTGETME MODAL -->
+    <div class="admin-modal" id="turnir-modal">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h3 id="modal-title">Täze Turnir</h3>
+                <button class="modal-close-btn" onclick="closeTurnirModal()" type="button"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="turnir-form" class="ayar-form" style="padding:0; border:none; background:none;">
+                <input type="hidden" id="modal-turnir-id" value="">
+                
+                <div class="ayar-group">
+                    <label>Turnir Ady</label>
+                    <input type="text" id="turnir-ad" placeholder="Mysal: PUBG MOBILE SQUAD" required>
+                </div>
+                <div class="ayar-group">
+                    <label>Senesi</label>
+                    <input type="text" id="turnir-senesi" placeholder="Mysal: 25 Iýul 2026" required>
+                </div>
+                <div class="ayar-group">
+                    <label>Wagty</label>
+                    <input type="text" id="turnir-wagty" placeholder="Mysal: 20:00 (TM)" required>
+                </div>
+                <div class="ayar-group">
+                    <label>Karta</label>
+                    <input type="text" id="turnir-karta" placeholder="Mysal: Erangel" required>
+                </div>
+                <div class="ayar-group">
+                    <label>Mode</label>
+                    <select id="turnir-mode" style="width:100%; padding:14px 16px; background:rgba(255,255,255,0.04); border:2px solid rgba(255,255,255,0.08); border-radius:12px; color:#e8e8e8; font-size:15px; font-family:'Rajdhani',sans-serif;">
+                        <option value="squad">Squad (4 kişi)</option>
+                        <option value="duo">Duo (2 kişi)</option>
+                        <option value="solo">Solo (1 kişi)</option>
+                    </select>
+                </div>
+                <div class="ayar-group">
+                    <label>Gatnaşyk</label>
+                    <input type="text" id="turnir-gatnasym" placeholder="Mysal: Squad (4 kişi)">
+                </div>
+                <div class="ayar-group">
+                    <label>Toleg</label>
+                    <input type="text" id="turnir-tolek" placeholder="Mysal: 5 Manat">
+                </div>
+                <div class="ayar-group">
+                    <label>Toleg Usuly</label>
+                    <input type="text" id="turnir-tolek-usuly" placeholder="Mysal: TMCell SMS">
+                </div>
+                <div class="ayar-group">
+                    <label>Yer Sany</label>
+                    <input type="number" id="turnir-yer-sany" value="100" min="1" max="10000">
+                </div>
+                <div class="ayar-group">
+                    <label>1-nji Orun</label>
+                    <input type="text" id="turnir-b1" placeholder="Mysal: 300 Manat|+ 🏆 Kubok">
+                </div>
+                <div class="ayar-group">
+                    <label>2-nji Orun</label>
+                    <input type="text" id="turnir-b2" placeholder="Mysal: 150 Manat">
+                </div>
+                <div class="ayar-group">
+                    <label>3-nji Orun</label>
+                    <input type="text" id="turnir-b3" placeholder="Mysal: 50 Manat">
+                </div>
+                <div class="ayar-group">
+                    <label>Jemi Bayrak</label>
+                    <input type="text" id="turnir-bjemi" placeholder="Mysal: 500 M">
+                </div>
+                <div class="ayar-group">
+                    <label>Status</label>
+                    <select id="turnir-status" style="width:100%; padding:14px 16px; background:rgba(255,255,255,0.04); border:2px solid rgba(255,255,255,0.08); border-radius:12px; color:#e8e8e8; font-size:15px; font-family:'Rajdhani',sans-serif;">
+                        <option value="upcoming">Gelejek</option>
+                        <option value="current">Häzirki</option>
+                        <option value="past">Geçen</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit" id="modal-submit-btn" style="margin-top:10px;">
+                    <span class="btn-text">SAKLA</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
         let csrfToken = '';
         async function getCsrfToken() {
@@ -143,58 +377,115 @@
             if (btn) btn.classList.add('active');
         }
 
-        async function saveAyarlar() {
+        // ========== TURNIR MODAL ==========
+        function openTurnirModal() {
+            document.getElementById('modal-title').textContent = 'Täze Turnir';
+            document.getElementById('modal-turnir-id').value = '';
+            document.getElementById('turnir-form').reset();
+            document.getElementById('turnir-modal').classList.add('active');
+        }
+
+        function closeTurnirModal() {
+            document.getElementById('turnir-modal').classList.remove('active');
+        }
+
+        function editTurnir(id) {
+            // Serverden turnir maglumatlaryny almak
+            fetch('/api/turnir-detay/' + id, {
+                credentials: 'same-origin'
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    const t = result.turnir;
+                    document.getElementById('modal-title').textContent = 'Turnir Üýtget';
+                    document.getElementById('modal-turnir-id').value = t.id;
+                    document.getElementById('turnir-ad').value = t.ad;
+                    document.getElementById('turnir-senesi').value = t.senesi;
+                    document.getElementById('turnir-wagty').value = t.wagty;
+                    document.getElementById('turnir-karta').value = t.karta;
+                    document.getElementById('turnir-mode').value = t.mode;
+                    document.getElementById('turnir-gatnasym').value = t.gatnasym;
+                    document.getElementById('turnir-tolek').value = t.tolek;
+                    document.getElementById('turnir-tolek-usuly').value = t.tolek_usuly;
+                    document.getElementById('turnir-yer-sany').value = t.yer_sany;
+                    document.getElementById('turnir-b1').value = t.bayrak_1;
+                    document.getElementById('turnir-b2').value = t.bayrak_2;
+                    document.getElementById('turnir-b3').value = t.bayrak_3;
+                    document.getElementById('turnir-bjemi').value = t.bayrak_jemi;
+                    document.getElementById('turnir-status').value = t.status;
+                    document.getElementById('turnir-modal').classList.add('active');
+                }
+            })
+            .catch(e => alert('Turnir maglumatlaryny almakda yalnyslyk!'));
+        }
+
+        async function deleteTurnir(id, ad) {
+            if (!confirm('"' + ad + '" turnirini pozmak isleyarsinizmi?')) return;
             if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
-            const yerSany = document.getElementById('ayar-yer-sany').value;
-            if (!yerSany || yerSany < 1 || yerSany > 10000) {
-                alert('Yer sany 1-10000 aralygynda bolmaly!');
-                return;
+
+            try {
+                const response = await fetch('/api/admin-turnir-sil', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({turnir_id: id, csrf_token: csrfToken}),
+                    credentials: 'same-origin'
+                });
+                const result = await response.json();
+                if (result.success) location.reload();
+                else alert(result.message);
+            } catch (error) { alert('Yalnyslyk: ' + error.message); }
+        }
+
+        document.getElementById('turnir-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
+
+            const turnirId = document.getElementById('modal-turnir-id').value;
+            const isEdit = turnirId !== '';
+
+            const data = {
+                ad: document.getElementById('turnir-ad').value,
+                senesi: document.getElementById('turnir-senesi').value,
+                wagty: document.getElementById('turnir-wagty').value,
+                karta: document.getElementById('turnir-karta').value,
+                mode: document.getElementById('turnir-mode').value,
+                gatnasym: document.getElementById('turnir-gatnasym').value,
+                tolek: document.getElementById('turnir-tolek').value,
+                tolek_usuly: document.getElementById('turnir-tolek-usuly').value,
+                yer_sany: document.getElementById('turnir-yer-sany').value,
+                bayrak_1: document.getElementById('turnir-b1').value,
+                bayrak_2: document.getElementById('turnir-b2').value,
+                bayrak_3: document.getElementById('turnir-b3').value,
+                bayrak_jemi: document.getElementById('turnir-bjemi').value,
+                status: document.getElementById('turnir-status').value,
+                csrf_token: csrfToken
+            };
+
+            if (isEdit) {
+                data.turnir_id = parseInt(turnirId);
             }
-            const data = {
-                turnir_senesi: document.getElementById('ayar-senesi').value,
-                turnir_wagty: document.getElementById('ayar-wagty').value,
-                turnir_karta: document.getElementById('ayar-karta').value,
-                turnir_gatnasym: document.getElementById('ayar-gatnasym').value,
-                turnir_tolek: document.getElementById('ayar-tolek').value,
-                turnir_tolek_usuly: document.getElementById('ayar-tolek-usuly').value,
-                turnir_yer_sany: yerSany,
-                csrf_token: csrfToken
-            };
+
+            const url = isEdit ? '/api/admin-turnir-guncelle' : '/api/admin-turnir-ekle';
+
             try {
-                const response = await fetch('/api/admin-ayarlari-kaydet', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data),
                     credentials: 'same-origin'
                 });
-                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
                 const result = await response.json();
-                alert(result.message);
-                if (result.success) location.reload();
+                if (result.success) {
+                    closeTurnirModal();
+                    location.reload();
+                } else {
+                    alert(result.message);
+                }
             } catch (error) { alert('Yalnyslyk: ' + error.message); }
-        }
+        });
 
-        async function saveBayraklar() {
-            if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
-            const data = {
-                bayrak_1: document.getElementById('ayar-b1').value + '|' + document.getElementById('ayar-b1-bonus').value,
-                bayrak_2: document.getElementById('ayar-b2').value,
-                bayrak_3: document.getElementById('ayar-b3').value,
-                bayrak_jemi: document.getElementById('ayar-bjemi').value,
-                csrf_token: csrfToken
-            };
-            try {
-                const response = await fetch('/api/admin-ayarlari-kaydet', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data),
-                    credentials: 'same-origin'
-                });
-                if (!response.ok) throw new Error('Server yalnyslygy: ' + response.status);
-                const result = await response.json();
-                alert(result.message);
-                if (result.success) location.reload();
-            } catch (error) { alert('Yalnyslyk: ' + error.message); }
-        }
-
+        // ========== KATYLYMCY ISLEMLERI ==========
         async function onayla(refCode) {
             if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
             if (!confirm('Tassyklamak isleyarsinizmi?')) return;

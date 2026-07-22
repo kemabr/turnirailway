@@ -210,8 +210,18 @@
             background-color: transparent !important;
             -webkit-tap-highlight-color: transparent !important;
         }
-</style><base target="_blank">
-</head>
+        /* Prevent button flash on page load */
+        #btn-kayit, #btn-profil {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        #btn-kayit.show, #btn-profil.show {
+            display: inline-flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+</style></head>
 <body>
     <div class="bg-animation">
         <div class="particle"></div>
@@ -233,8 +243,8 @@
                 </div>
             </div>
             <div class="nav-right" id="nav-buttons">
-                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" >REGISTRASYA</button>
-                <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;"><i class="fas fa-user"></i></a>
+                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none !important;">REGISTRASYA</button>
+                <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none !important;"><i class="fas fa-user"></i></a>
             </div>
         </div>
     </header>
@@ -490,12 +500,18 @@
             const btnKayit = document.getElementById('btn-kayit');
             const btnProfil = document.getElementById('btn-profil');
 
+            if (!btnKayit || !btnProfil) return;
+
+            // Reset inline styles first
+            btnKayit.style.cssText = '';
+            btnProfil.style.cssText = '';
+
             if (isUserLoggedIn) {
-                if (btnKayit) btnKayit.style.display = 'none';
-                if (btnProfil) btnProfil.style.display = 'inline-flex';
+                btnKayit.style.display = 'none';
+                btnProfil.style.display = 'inline-flex';
             } else {
-                if (btnKayit) btnKayit.style.display = 'inline-block';
-                if (btnProfil) btnProfil.style.display = 'none';
+                btnKayit.style.display = 'inline-block';
+                btnProfil.style.display = 'none';
             }
         }
 
@@ -540,12 +556,6 @@
 
         // ===================== INITIALIZATION =====================
         document.addEventListener('DOMContentLoaded', async function() {
-            // Show register button immediately (before login check)
-            const btnKayit = document.getElementById('btn-kayit');
-            const btnProfil = document.getElementById('btn-profil');
-            if (btnKayit) btnKayit.style.display = 'inline-block';
-            if (btnProfil) btnProfil.style.display = 'none';
-
             await getCsrfToken();
             await checkLoginStatus();
 

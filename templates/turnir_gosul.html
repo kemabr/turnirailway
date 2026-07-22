@@ -114,6 +114,10 @@
         .bottom-nav-item.active {
             color: #ff2d55;
         }
+        /* Turnir ID gizlenen input */
+        .hidden-input {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -132,18 +136,21 @@
             <p>Maglumatlaryňyzy dolduryň</p>
         </header>
 
-        <!-- Tournament Summary -->
+        <!-- Tournament Summary - Dinamik -->
         <div class="tournament-summary">
-            <h3><i class="fas fa-trophy"></i> PUBG MOBILE SQUAD</h3>
-            <p><strong>Sene:</strong> 25 Iýul 2026</p>
-            <p><strong>Wagt:</strong> 20:00 (TM)</p>
-            <p><strong>Karta:</strong> Erangel</p>
-            <p><strong>Gatnaşyk:</strong> 4 VS 4 (Squad)</p>
-            <p><strong>Toleg:</strong> 5 Manat</p>
+            <h3><i class="fas fa-trophy"></i> {{ turnir.ad }}</h3>
+            <p><strong>Sene:</strong> {{ turnir.senesi }}</p>
+            <p><strong>Wagt:</strong> {{ turnir.wagty }}</p>
+            <p><strong>Karta:</strong> {{ turnir.karta }}</p>
+            <p><strong>Gatnaşyk:</strong> {{ turnir.gatnasym }}</p>
+            <p><strong>Toleg:</strong> {{ turnir.tolek }}</p>
         </div>
 
         <!-- Join Form -->
         <form id="join-tournament-form" class="join-form" novalidate>
+            <!-- Gizlenen turnir_id -->
+            <input type="hidden" id="turnir_id" value="{{ turnir.id }}">
+            
             <div class="form-group">
                 <label for="pubg_id"><i class="fas fa-gamepad"></i> PUBG ID</label>
                 <input type="text" id="pubg_id" placeholder="PUBG ID girizin (8-12 san)" required 
@@ -160,8 +167,8 @@
 
             <div class="payment-info-box">
                 <h4><i class="fas fa-info-circle"></i> Toleg Maglumatlary</h4>
-                <p>Gatnasik tolegi: <strong>5 Manat</strong></p>
-                <p>Toleg usuly: <strong>TMCell SMS (0804)</strong></p>
+                <p>Gatnasik tolegi: <strong>{{ turnir.tolek }}</strong></p>
+                <p>Toleg usuly: <strong>{{ turnir.tolek_usuly }}</strong></p>
                 <p>Toleg etjek belgi: <strong id="display-phone">-</strong></p>
             </div>
 
@@ -192,8 +199,8 @@
             </a>
         </div>
     </nav>
-
-    <script>
+    
+        <script>
         let csrfToken = '';
 
         async function getCsrfToken() {
@@ -218,6 +225,7 @@
 
             const pubgId = document.getElementById('pubg_id').value.trim();
             const paymentPhone = document.getElementById('payment_phone').value.trim();
+            const turnirId = document.getElementById('turnir_id').value;
 
             if (!pubgId || pubgId.length < 8) {
                 alert('PUBG ID 8 sanly bolmaly!');
@@ -226,6 +234,11 @@
 
             if (!paymentPhone) {
                 alert('Toleg telefon belgisini girizin!');
+                return;
+            }
+
+            if (!turnirId) {
+                alert('Turnir ID tapylmady!');
                 return;
             }
 
@@ -238,16 +251,13 @@
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
 
-            // Get tournament ID from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const tournamentId = urlParams.get('id') || 'default';
-
             try {
                 const response = await fetch('/api/turnir-goşul', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tournament_id: tournamentId,
+                        turnir_id: parseInt(turnirId),
+                        tournament_id: 'turnir-' + turnirId,
                         pubg_id: pubgId,
                         payment_phone: paymentPhone,
                         csrf_token: csrfToken
@@ -258,7 +268,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    window.location.href = '/odeme?tournament=' + tournamentId;
+                    window.location.href = '/odeme?turnir=' + turnirId;
                 } else {
                     alert(result.message || 'Yalnyslyk yuze cykdy');
                     btn.disabled = false;

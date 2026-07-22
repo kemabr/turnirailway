@@ -210,7 +210,8 @@
             background-color: transparent !important;
             -webkit-tap-highlight-color: transparent !important;
         }
-</style></head>
+</style><base target="_blank">
+</head>
 <body>
     <div class="bg-animation">
         <div class="particle"></div>
@@ -232,7 +233,7 @@
                 </div>
             </div>
             <div class="nav-right" id="nav-buttons">
-                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" style="display:none;">REGISTRASYA</button>
+                <button class="btn-nav-primary" id="btn-kayit" onclick="openAuthModal()" >REGISTRASYA</button>
                 <a href="/profil" class="btn-nav-primary" id="btn-profil" style="display:none;"><i class="fas fa-user"></i></a>
             </div>
         </div>
@@ -539,6 +540,12 @@
 
         // ===================== INITIALIZATION =====================
         document.addEventListener('DOMContentLoaded', async function() {
+            // Show register button immediately (before login check)
+            const btnKayit = document.getElementById('btn-kayit');
+            const btnProfil = document.getElementById('btn-profil');
+            if (btnKayit) btnKayit.style.display = 'inline-block';
+            if (btnProfil) btnProfil.style.display = 'none';
+
             await getCsrfToken();
             await checkLoginStatus();
 

@@ -771,4 +771,69 @@
                     const btn = document.getElementById('register-submit-btn');
 
                     if (!ad || !telefon || !parol) {
-                        errorEl.textConten
+                        errorEl.textContent = 'Ahli maglumatlary dolduryň!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (ad.length < 2) {
+                        errorEl.textContent = 'Ad 2 harpdan uly bolmaly!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (parol.length < 6) {
+                        errorEl.textContent = 'Parol 6 harpdan uly bolmaly!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (parol !== parol_tekrar) {
+                        errorEl.textContent = 'Parollar deň däl!';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    const telClean = telefon.replace(/\s/g, '').replace(/-/g, '').replace(/\+/g, '');
+                    if (!/^\d{8}$/.test(telClean) && !/^993\d{8}$/.test(telClean)) {
+                        errorEl.textContent = 'Telefon belgisi nadogry! Format: +993 XX XXX XXX ya-da 8 san';
+                        errorEl.classList.add('show');
+                        return;
+                    }
+                    if (!csrfToken) {
+                        errorEl.textContent = 'CSRF token tapylmady. Tazeleyn.';
+                        errorEl.classList.add('show');
+                        await getCsrfToken();
+                        return;
+                    }
+                    btn.disabled = true;
+                    errorEl.classList.remove('show');
+                    try {
+                        const response = await fetch('/api/kayit-ol', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ad, telefon, parol, parol_tekrar, csrf_token: csrfToken }),
+                            credentials: 'same-origin'
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            isUserLoggedIn = true;
+                            await checkLoginStatus();
+                            updateNavButtons();
+                            closeAuthModal();
+                            // Sahypany tazelemek
+                            window.location.reload();
+                        } else {
+                            errorEl.textContent = result.message || 'Yalnyslyk yuze cykdy';
+                            errorEl.classList.add('show');
+                            await getCsrfToken();
+                        }
+                    } catch (error) {
+                        errorEl.textContent = 'Yalnyslyk: ' + error.message;
+                        errorEl.classList.add('show');
+                        await getCsrfToken();
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

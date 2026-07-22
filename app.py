@@ -708,6 +708,7 @@ def takim():
     if not ref_code:
         return redirect(url_for('login'))
 
+    db = get_db()  # <-- BU SETIR GOŞMALI
     kat = db.execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref_code,)).fetchone()
     if not kat:
         session.clear()

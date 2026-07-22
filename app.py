@@ -129,6 +129,8 @@ def close_connection(exception):
 def init_db():
     with app.app_context():
         db = get_db()
+        
+        # Katilimcilar - turnir_id goşuldy
         db.execute("""
             CREATE TABLE IF NOT EXISTS katilimcilar (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,6 +141,7 @@ def init_db():
                 pubg_id TEXT,
                 payment_phone TEXT,
                 tournament_id TEXT,
+                turnir_id INTEGER,
                 ulasim TEXT,
                 takim_kodu TEXT,
                 takim_lideri INTEGER DEFAULT 0,
@@ -146,9 +149,12 @@ def init_db():
                 admin_onay INTEGER DEFAULT 0,
                 kayit_tarihi TEXT NOT NULL,
                 odeme_tarihi TEXT,
-                onay_tarihi TEXT
+                onay_tarihi TEXT,
+                FOREIGN KEY (turnir_id) REFERENCES turnirler(id)
             )
         """)
+        
+        # Takimlar - ozal yaly
         db.execute("""
             CREATE TABLE IF NOT EXISTS takimlar (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -161,12 +167,39 @@ def init_db():
                 durum INTEGER DEFAULT 0
             )
         """)
+        
+        # TÄZE: Turnirler tablisasy
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS turnirler (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ad TEXT NOT NULL,
+                senesi TEXT NOT NULL,
+                wagty TEXT NOT NULL,
+                karta TEXT NOT NULL,
+                mode TEXT NOT NULL DEFAULT 'squad',
+                gatnasym TEXT NOT NULL,
+                tolek TEXT NOT NULL,
+                tolek_usuly TEXT NOT NULL,
+                yer_sany INTEGER DEFAULT 100,
+                bayrak_1 TEXT DEFAULT '300 Manat|+ 🏆 Kubok',
+                bayrak_2 TEXT DEFAULT '150 Manat',
+                bayrak_3 TEXT DEFAULT '50 Manat',
+                bayrak_jemi TEXT DEFAULT '500 M',
+                status TEXT DEFAULT 'upcoming',
+                durum INTEGER DEFAULT 1,
+                created_at TEXT NOT NULL
+            )
+        """)
+        
+        # Ayarlar - ozal yaly
         db.execute("""
             CREATE TABLE IF NOT EXISTS ayarlar (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             )
         """)
+        
+        # Default ayarlar (esasy sahypa üçin backup)
         defaults = {
             'turnir_senesi': '25 Iýul 2026',
             'turnir_wagty': '20:00 (TM)',
@@ -182,14 +215,25 @@ def init_db():
         }
         for key, value in defaults.items():
             db.execute("INSERT OR IGNORE INTO ayarlar (key, value) VALUES (?, ?)", (key, value))
+        
+        # Default turnir (eger yok bolsa)
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        db.execute("""
+            INSERT OR IGNORE INTO turnirler (id, ad, senesi, wagty, karta, mode, gatnasym, tolek, tolek_usuly, yer_sany, status, created_at)
+            VALUES (1, 'PUBG MOBILE SQUAD', '25 Iýul 2026', '20:00 (TM)', 'Erangel', 'squad', 'Squad (4 kişi)', '5 Manat', 'TMCell SMS', 100, 'upcoming', ?)
+        """, (now,))
+        
+        # Indexler
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_ref ON katilimcilar(referans_kodu)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_telefon ON katilimcilar(telefon)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_takim ON katilimcilar(takim_kodu)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_pubg ON katilimcilar(pubg_id)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_katilimci_turnir ON katilimcilar(turnir_id)")
         db.execute("CREATE INDEX IF NOT EXISTS idx_takim_kod ON takimlar(takim_kodu)")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_turnir_status ON turnirler(status)")
         db.commit()
-
-# ===================== HELPERS =====================
+        
+        # ===================== HELPERS =====================
 
 def get_ayar(key, default=''):
     row = get_db().execute('SELECT value FROM ayarlar WHERE key = ?', (key,)).fetchone()
@@ -230,34 +274,87 @@ def send_telegram_message(message):
     except requests.RequestException:
         return False
 
-def get_stats():
-    stats = get_db().execute("""
-        SELECT COALESCE(COUNT(*), 0) as toplam,
-               COALESCE(SUM(CASE WHEN odeme_durumu = 1 THEN 1 ELSE 0 END), 0) as odeme_yapan,
-               COALESCE(SUM(CASE WHEN admin_onay = 1 THEN 1 ELSE 0 END), 0) as onaylanan
-        FROM katilimcilar
-    """).fetchone()
-    yer_sany = int(get_ayar('turnir_yer_sany', '100'))
+# ÜÝTGETME 1: Diňe tassyklanan gatnaşyjylary sanamak
+# Eger ulanyjy hasap döredip, ýöne tassyklanmadyk bolsa, sana köşmeýär
+def get_stats(turnir_id=None):
+    db = get_db()
+    if turnir_id:
+        # Belli bir turnir üçin
+        stats = db.execute("""
+            SELECT COALESCE(COUNT(*), 0) as toplam,
+                   COALESCE(SUM(CASE WHEN odeme_durumu = 1 THEN 1 ELSE 0 END), 0) as odeme_yapan,
+                   COALESCE(SUM(CASE WHEN admin_onay = 1 THEN 1 ELSE 0 END), 0) as onaylanan
+            FROM katilimcilar
+            WHERE turnir_id = ?
+        """, (turnir_id,)).fetchone()
+        yer_sany = db.execute('SELECT yer_sany FROM turnirler WHERE id = ?', (turnir_id,)).fetchone()
+        yer_sany = yer_sany['yer_sany'] if yer_sany else 100
+    else:
+        # Umumy (esasy sahypa üçin)
+        stats = db.execute("""
+            SELECT COALESCE(COUNT(*), 0) as toplam,
+                   COALESCE(SUM(CASE WHEN odeme_durumu = 1 THEN 1 ELSE 0 END), 0) as odeme_yapan,
+                   COALESCE(SUM(CASE WHEN admin_onay = 1 THEN 1 ELSE 0 END), 0) as onaylanan
+            FROM katilimcilar
+        """).fetchone()
+        yer_sany = int(get_ayar('turnir_yer_sany', '100'))
+    
     toplam = stats['toplam'] or 0
+    onaylanan = stats['onaylanan'] or 0
     return {
-        'toplam': toplam,
+        'toplam': toplam,              # Ähli gatnaşyjylar (hasap döredenler)
         'odeme_yapan': stats['odeme_yapan'] or 0,
-        'onaylanan': stats['onaylanan'] or 0,
+        'onaylanan': onaylanan,         # Diňe tassyklananlar (sana artýanlar)
         'yer_sany': yer_sany,
-        'galan': max(0, yer_sany - toplam)
+        'galan': max(0, yer_sany - onaylanan)  # Diňe tassyklananlara görä galan yer
     }
 
-def get_turnir_data():
+# ÜÝTGETME 2: Ulanyjynyň gatnaşan turnirine görä maglumatlar
+def get_turnir_data(turnir_id=None):
+    db = get_db()
+    if turnir_id:
+        row = db.execute('SELECT * FROM turnirler WHERE id = ?', (turnir_id,)).fetchone()
+        if row:
+            return {
+                'id': row['id'],
+                'ad': row['ad'],
+                'senesi': row['senesi'],
+                'wagty': row['wagty'],
+                'karta': row['karta'],
+                'gatnasym': row['gatnasym'],
+                'tolek': row['tolek'],
+                'tolek_usuly': row['tolek_usuly'],
+                'mode': row['mode']
+            }
+    # Fallback: esasy ayarlar
     return {
+        'id': None,
+        'ad': 'PUBG MOBILE SQUAD',
         'senesi': get_ayar('turnir_senesi'),
         'wagty': get_ayar('turnir_wagty'),
         'karta': get_ayar('turnir_karta'),
         'gatnasym': get_ayar('turnir_gatnasym'),
         'tolek': get_ayar('turnir_tolek'),
-        'tolek_usuly': get_ayar('turnir_tolek_usuly')
+        'tolek_usuly': get_ayar('turnir_tolek_usuly'),
+        'mode': 'squad'
     }
 
-def get_bayraklar():
+# ÜÝTGETME 3: Ulanyjynyň gatnaşan turnirine görä baýraklar
+def get_bayraklar(turnir_id=None):
+    db = get_db()
+    if turnir_id:
+        row = db.execute('SELECT bayrak_1, bayrak_2, bayrak_3, bayrak_jemi FROM turnirler WHERE id = ?', (turnir_id,)).fetchone()
+        if row:
+            b1 = row['bayrak_1'].split('|')
+            b2 = row['bayrak_2'].split('|')
+            b3 = row['bayrak_3'].split('|')
+            return {
+                'bir': {'mukdar': b1[0], 'bonus': b1[1] if len(b1) > 1 else ''},
+                'iki': {'mukdar': b2[0], 'bonus': b2[1] if len(b2) > 1 else ''},
+                'uc': {'mukdar': b3[0], 'bonus': b3[1] if len(b3) > 1 else ''},
+                'jemi': row['bayrak_jemi']
+            }
+    # Fallback: esasy ayarlar
     b1 = get_ayar('bayrak_1').split('|')
     b2 = get_ayar('bayrak_2').split('|')
     b3 = get_ayar('bayrak_3').split('|')
@@ -267,6 +364,40 @@ def get_bayraklar():
         'uc': {'mukdar': b3[0], 'bonus': b3[1] if len(b3) > 1 else ''},
         'jemi': get_ayar('bayrak_jemi')
     }
+
+# Täze: Ähli turnirleri getirmek (turnirler sahypasy üçin)
+def get_all_turnirler(status=None, mode=None):
+    db = get_db()
+    query = 'SELECT * FROM turnirler WHERE 1=1'
+    params = []
+    if status:
+        query += ' AND status = ?'
+        params.append(status)
+    if mode:
+        query += ' AND mode = ?'
+        params.append(mode)
+    query += ' ORDER BY created_at DESC'
+    rows = db.execute(query, params).fetchall()
+    turnirler = []
+    for row in rows:
+        stats = get_stats(row['id'])
+        turnirler.append({
+            'id': row['id'],
+            'ad': row['ad'],
+            'senesi': row['senesi'],
+            'wagty': row['wagty'],
+            'karta': row['karta'],
+            'mode': row['mode'],
+            'gatnasym': row['gatnasym'],
+            'tolek': row['tolek'],
+            'tolek_usuly': row['tolek_usuly'],
+            'yer_sany': row['yer_sany'],
+            'bayrak_jemi': row['bayrak_jemi'],
+            'status': row['status'],
+            'onaylanan': stats['onaylanan'],
+            'galan': stats['galan']
+        })
+    return turnirler
 
 def admin_required(f):
     @wraps(f)
@@ -290,11 +421,10 @@ def validate_phone(phone):
     cleaned = re.sub(r'[\s\-\+\(\)]', '', phone)
     if not cleaned.isdigit():
         return False, None
-    # Diňe 8 sanly ýa-da 993+8 sanly kabul et
     if len(cleaned) == 8:
         return True, cleaned
     if len(cleaned) == 11 and cleaned.startswith('993'):
-        return True, cleaned[3:]  # 993 aýyr, diňe 8 san galdyr
+        return True, cleaned[3:]
     return False, None
 
 def sanitize(text, max_len=100):
@@ -306,11 +436,9 @@ def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 def check_password(password):
-    # Ulanyjy diňe düz tekst paroly bilen barlamagy isleýär
     return password == ADMIN_SIFRE_HASH
-
-
-# ===================== ERROR HANDLERS =====================
+    
+    # ===================== ERROR HANDLERS =====================
 
 @app.errorhandler(404)
 def not_found(e):
@@ -335,18 +463,34 @@ def server_error(e):
 def rate_limit(e):
     return jsonify({'success': False, 'message': 'Gaty köp synanyşyk!'}), 429
 
+
 # ===================== ROUTES =====================
 
+# ÜÝTGETME: index.html-de ulanyjynyň gatnaşan turnirine görä maglumatlar
 @app.route('/')
 def index():
-    return render_template('index.html', stats=get_stats(), turnir=get_turnir_data(), bayraklar=get_bayraklar())
+    # Ulanyjynyň gatnaşan turnirini tapmak
+    user_turnir_id = None
+    if session.get('user_logged_in') and session.get('user_ref'):
+        db = get_db()
+        kat = db.execute('SELECT turnir_id FROM katilimcilar WHERE referans_kodu = ?', 
+                        (session['user_ref'],)).fetchone()
+        if kat and kat['turnir_id']:
+            user_turnir_id = kat['turnir_id']
+    
+    return render_template('index.html', 
+                          stats=get_stats(user_turnir_id), 
+                          turnir=get_turnir_data(user_turnir_id), 
+                          bayraklar=get_bayraklar(user_turnir_id),
+                          user_turnir_id=user_turnir_id)
+
 
 # ===================== LOGIN / REGISTER =====================
 
 @app.route('/kayit')
 def kayit():
-    if get_stats()['toplam'] >= get_stats()['yer_sany']:
-        return redirect(url_for('index'))
+    # Hasap döretmek - turnir ýeri barlamak gerek däl
+    # Diňe tassyklanan gatnaşyjylar sana goşulýar
     return render_template('kayit.html')
 
 @app.route('/login')
@@ -392,18 +536,18 @@ def api_kayit_ol():
             db.execute('ROLLBACK')
             return jsonify({'success': False, 'message': 'Bu telefon belgisi bilen eýýäm hasap açylypdyr!'})
 
-        # Yer sanyny barla
-        count = db.execute('SELECT COUNT(*) as s FROM katilimcilar').fetchone()['s']
-        yer = int(get_ayar('turnir_yer_sany', '100'))
-        if count >= yer:
-            db.execute('ROLLBACK')
-            return jsonify({'success': False, 'message': 'Ähli ýerler doldy!'})
-
+        # ÜÝTGETME: Hasap döretmekde turnir ýeri barlamak GEREK DÄL
+        # Diňe tassyklanylandan soň sana goşulýar
+        
         ref = generate_ref_code()
         parol_hash = hash_password(parol)
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        db.execute("INSERT INTO katilimcilar (referans_kodu, ad, telefon, parol_hash, kayit_tarihi) VALUES (?, ?, ?, ?, ?)",
-                  (ref, ad, telefon_clean, parol_hash, now))
+        
+        # turnir_id = NULL (entek gatnaşmadyk)
+        db.execute("""
+            INSERT INTO katilimcilar (referans_kodu, ad, telefon, parol_hash, turnir_id, kayit_tarihi) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (ref, ad, telefon_clean, parol_hash, None, now))
         db.commit()
     except sqlite3.IntegrityError:
         db.execute('ROLLBACK')
@@ -464,7 +608,7 @@ def logout():
     session.pop('user_ref', None)
     session.pop('user_telefon', None)
     return redirect(url_for('index'))
-
+    
 # ===================== PROFILE / PAYMENT / TEAM =====================
 
 @app.route('/profil')
@@ -485,6 +629,11 @@ def profil():
         session.clear()
         return redirect(url_for('login'))
 
+    # ÜÝTGETME: Gatnaşan turnir maglumatlaryny getirmek
+    user_turnir = None
+    if kat['turnir_id']:
+        user_turnir = db.execute('SELECT * FROM turnirler WHERE id = ?', (kat['turnir_id'],)).fetchone()
+
     arkadaslar = []
     if kat['takim_kodu']:
         arkadaslar = db.execute("""
@@ -493,7 +642,10 @@ def profil():
             WHERE takim_kodu = ? AND referans_kodu != ?
         """, (kat['takim_kodu'], ref_code)).fetchall()
 
-    return render_template('profil.html', katilimci=kat, takim_arkadaslari=arkadaslar)
+    return render_template('profil.html', 
+                          katilimci=kat, 
+                          takim_arkadaslari=arkadaslar,
+                          user_turnir=user_turnir)
 
 @app.route('/odeme')
 @login_required
@@ -502,11 +654,25 @@ def odeme():
     if not ref_code:
         return redirect(url_for('login'))
 
-    kat = get_db().execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref_code,)).fetchone()
+    db = get_db()
+    kat = db.execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref_code,)).fetchone()
     if not kat:
         session.clear()
         return redirect(url_for('login'))
-    return render_template('odeme.html', katilimci=kat)
+    
+    # ÜÝTGETME: Gatnaşan turnir töleg maglumatlaryny getirmek
+    turnir_tolek = '5 Manat'
+    turnir_tolek_usuly = 'TMCell SMS'
+    if kat['turnir_id']:
+        turnir = db.execute('SELECT tolek, tolek_usuly FROM turnirler WHERE id = ?', (kat['turnir_id'],)).fetchone()
+        if turnir:
+            turnir_tolek = turnir['tolek']
+            turnir_tolek_usuly = turnir['tolek_usuly']
+    
+    return render_template('odeme.html', 
+                          katilimci=kat,
+                          turnir_tolek=turnir_tolek,
+                          turnir_tolek_usuly=turnir_tolek_usuly)
 
 @app.route('/api/odeme-yapildi', methods=['POST'])
 @limiter.limit("5 per minute")
@@ -542,7 +708,7 @@ def takim():
     if not ref_code:
         return redirect(url_for('login'))
 
-    kat = get_db().execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref_code,)).fetchone()
+    kat = db.execute('SELECT * FROM katilimcilar WHERE referans_kodu = ?', (ref_code,)).fetchone()
     if not kat:
         session.clear()
         return redirect(url_for('login'))
@@ -630,7 +796,146 @@ def api_takima_katil():
 
     return jsonify({'success': True, 'message': f'Topara goşuldyňyz! ({say+1}/4)'})
 
-# ===================== ADMIN (GIZLIN) =====================
+
+# ===================== TURNIR ROUTES =====================
+
+# ÜÝTGETME: Turnirler sahypasy - admin döreden turnirler
+@app.route('/turnir')
+def turnir():
+    db = get_db()
+    # Ähli turnirleri getirmek
+    turnirler = get_all_turnirler()
+    return render_template('turnir.html', turnirler=turnirler)
+
+@app.route('/turnir/gosul')
+@login_required
+def turnir_gosul():
+    # URL-dan turnir ID almak
+    tournament_id = request.args.get('id', '')
+    db = get_db()
+    
+    # Turnir maglumatlaryny getirmek
+    turnir = None
+    if tournament_id:
+        # ID numeric bolsa
+        if tournament_id.isdigit():
+            turnir = db.execute('SELECT * FROM turnirler WHERE id = ?', (int(tournament_id),)).fetchone()
+        else:
+            # Slug arkaly (meselem: pubg-squad-58)
+            turnir = db.execute('SELECT * FROM turnirler WHERE id = ?', (1,)).fetchone()
+    
+    if not turnir:
+        # Default turnir
+        turnir = {
+            'id': 1,
+            'ad': 'PUBG MOBILE SQUAD',
+            'senesi': '25 Iýul 2026',
+            'wagty': '20:00 (TM)',
+            'karta': 'Erangel',
+            'mode': 'squad',
+            'gatnasym': 'Squad (4 kişi)',
+            'tolek': '5 Manat',
+            'tolek_usuly': 'TMCell SMS'
+        }
+    
+    return render_template('turnir_gosul.html', turnir=turnir)
+
+# ÜÝTGETME: Turnira goşulmak - turnir_id baglanyşyk saklamak
+@app.route('/api/turnir-goşul', methods=['POST'])
+@login_required
+@limiter.limit("3 per minute")
+def api_turnir_gosul():
+    data = request.get_json() or {}
+
+    if not validate_csrf_token(data.get('csrf_token', '')):
+        return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
+
+    pubg_id = sanitize(data.get('pubg_id', ''), 20)
+    payment_phone = str(data.get('payment_phone', '')).strip()
+    tournament_id = sanitize(data.get('tournament_id', ''), 50)
+    turnir_id = data.get('turnir_id')  # Täze: turnir ID
+
+    # FIX: PUBG ID diňe san bolmaly
+    if not pubg_id or len(pubg_id) < 8 or not pubg_id.isdigit():
+        return jsonify({'success': False, 'message': 'PUBG ID diňe san bolmaly (minimum 8)!'})
+
+    valid, phone_clean = validate_phone(payment_phone)
+    if not valid:
+        return jsonify({'success': False, 'message': 'Telefon belgisi nadogry!'})
+
+    ref = session.get('user_ref', '')
+    db = get_db()
+
+    # ÜÝTGETME: turnir_id baglanyşyk saklamak
+    # Eger turnir_id berilmedik bolsa, default 1
+    if not turnir_id:
+        # tournament_id slug-dan ID tapmak
+        # Häzirki wagtda default 1
+        turnir_id = 1
+    else:
+        turnir_id = int(turnir_id)
+
+    # Update user's PUBG ID, payment phone, and turnir_id
+    db.execute("""
+        UPDATE katilimcilar 
+        SET pubg_id = ?, payment_phone = ?, tournament_id = ?, turnir_id = ?
+        WHERE referans_kodu = ?
+    """, (pubg_id, phone_clean, tournament_id, turnir_id, ref))
+    db.commit()
+
+    logger.info(f"Turnir goşul: {ref} -> turnir_id: {turnir_id}")
+    return jsonify({'success': True, 'message': 'Turnira goşuldyňyz!', 'turnir_id': turnir_id})
+
+
+# ===================== API ROUTES =====================
+
+@app.route('/api/katilimci/me')
+@login_required
+def api_katilimci_me():
+    ref = session.get('user_ref')
+    if not ref:
+        return jsonify({'success': False, 'message': 'Giris edilmedi'}), 401
+    db = get_db()
+    kat = db.execute("""
+        SELECT k.*, t.takim_adi 
+        FROM katilimcilar k
+        LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
+        WHERE k.referans_kodu = ?
+    """, (ref,)).fetchone()
+    if not kat:
+        session.clear()
+        return jsonify({'success': False, 'message': 'Katylyjy tapylmady'}), 404
+    
+    # ÜÝTGETME: Gatnaşan turnir maglumatlaryny goşmak
+    result = dict(kat)
+    if kat['turnir_id']:
+        turnir = db.execute('SELECT ad, senesi, wagty FROM turnirler WHERE id = ?', (kat['turnir_id'],)).fetchone()
+        if turnir:
+            result['turnir_ady'] = turnir['ad']
+            result['turnir_senesi'] = turnir['senesi']
+            result['turnir_wagty'] = turnir['wagty']
+    
+    return jsonify({'success': True, 'katilimci': result})
+
+@app.route('/api/katilimci/<ref_code>')
+@login_required
+def api_katilimci(ref_code):
+    db = get_db()
+    kat = db.execute("""
+        SELECT k.referans_kodu, k.ad, k.telefon, k.takim_kodu, k.admin_onay, k.turnir_id, t.takim_adi 
+        FROM katilimcilar k
+        LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
+        WHERE k.referans_kodu = ?
+    """, (ref_code,)).fetchone()
+    if not kat:
+        return jsonify({'success': False})
+    return jsonify({'success': True, 'katilimci': dict(kat)})
+
+@app.route('/api/csrf-token')
+def api_csrf_token():
+    return jsonify({'success': True, 'csrf_token': generate_csrf_token()})
+    
+    # ===================== ADMIN (GIZLIN) =====================
 
 @app.route('/admin')
 def admin_login():
@@ -680,8 +985,129 @@ def admin_panel():
         ORDER BY t.id DESC
     """).fetchall()
 
-    return render_template('admin_panel.html', stats=stats, katilimcilar=katilimcilar,
-                          takimlar=takimlar, turnir=get_turnir_data(), bayraklar=get_bayraklar())
+    # ÜÝTGETME: Ähli turnirleri getirmek
+    turnirler = get_all_turnirler()
+
+    return render_template('admin_panel.html', 
+                          stats=stats, 
+                          katilimcilar=katilimcilar,
+                          takimlar=takimlar, 
+                          turnir=get_turnir_data(), 
+                          bayraklar=get_bayraklar(),
+                          turnirler=turnirler)
+
+
+# ÜÝTGETME: Täze turnir goşmak (admin)
+@app.route('/api/admin-turnir-ekle', methods=['POST'])
+@admin_required
+def api_admin_turnir_ekle():
+    data = request.get_json() or {}
+    if not validate_csrf_token(data.get('csrf_token', '')):
+        return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
+
+    ad = sanitize(data.get('ad', ''), 100)
+    senesi = sanitize(data.get('senesi', ''), 50)
+    wagty = sanitize(data.get('wagty', ''), 50)
+    karta = sanitize(data.get('karta', ''), 50)
+    mode = sanitize(data.get('mode', 'squad'), 20)
+    gatnasym = sanitize(data.get('gatnasym', ''), 100)
+    tolek = sanitize(data.get('tolek', ''), 50)
+    tolek_usuly = sanitize(data.get('tolek_usuly', ''), 100)
+    yer_sany = int(data.get('yer_sany', 100))
+    bayrak_1 = sanitize(data.get('bayrak_1', '300 Manat|+ 🏆 Kubok'), 100)
+    bayrak_2 = sanitize(data.get('bayrak_2', '150 Manat'), 100)
+    bayrak_3 = sanitize(data.get('bayrak_3', '50 Manat'), 100)
+    bayrak_jemi = sanitize(data.get('bayrak_jemi', '500 M'), 100)
+    status = sanitize(data.get('status', 'upcoming'), 20)
+
+    if not all([ad, senesi, wagty, karta]):
+        return jsonify({'success': False, 'message': 'Ad, sene, wagt we karta hökmany!'})
+
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    db = get_db()
+    db.execute("""
+        INSERT INTO turnirler (ad, senesi, wagty, karta, mode, gatnasym, tolek, tolek_usuly, 
+                              yer_sany, bayrak_1, bayrak_2, bayrak_3, bayrak_jemi, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (ad, senesi, wagty, karta, mode, gatnasym, tolek, tolek_usuly,
+          yer_sany, bayrak_1, bayrak_2, bayrak_3, bayrak_jemi, status, now))
+    db.commit()
+
+    logger.info(f"Täze turnir goşuldy: {ad}")
+    return jsonify({'success': True, 'message': 'Turnir üstünlikli goşuldy!'})
+
+
+# ÜÝTGETME: Turnir üýtgetmek (admin)
+@app.route('/api/admin-turnir-guncelle', methods=['POST'])
+@admin_required
+def api_admin_turnir_guncelle():
+    data = request.get_json() or {}
+    if not validate_csrf_token(data.get('csrf_token', '')):
+        return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
+
+    turnir_id = data.get('turnir_id')
+    if not turnir_id:
+        return jsonify({'success': False, 'message': 'Turnir ID hökmany!'})
+
+    db = get_db()
+    # Häzirki maglumatlary getirmek
+    turnir = db.execute('SELECT * FROM turnirler WHERE id = ?', (turnir_id,)).fetchone()
+    if not turnir:
+        return jsonify({'success': False, 'message': 'Turnir tapylmady!'})
+
+    # Üýtgedilen meýdanlary almak
+    updates = []
+    params = []
+    
+    fields = ['ad', 'senesi', 'wagty', 'karta', 'mode', 'gatnasym', 
+              'tolek', 'tolek_usuly', 'yer_sany', 'bayrak_1', 
+              'bayrak_2', 'bayrak_3', 'bayrak_jemi', 'status']
+    
+    for field in fields:
+        if field in data:
+            if field == 'yer_sany':
+                updates.append(f"{field} = ?")
+                params.append(int(data[field]))
+            else:
+                updates.append(f"{field} = ?")
+                params.append(sanitize(data[field], 200))
+    
+    if not updates:
+        return jsonify({'success': False, 'message': 'Üýtgetmeli maglumat ýok!'})
+
+    params.append(turnir_id)
+    query = f"UPDATE turnirler SET {', '.join(updates)} WHERE id = ?"
+    db.execute(query, params)
+    db.commit()
+
+    logger.info(f"Turnir üýtgedildi: ID {turnir_id}")
+    return jsonify({'success': True, 'message': 'Turnir üstünlikli üýtgedildi!'})
+
+
+# ÜÝTGETME: Turnir pozmak (admin)
+@app.route('/api/admin-turnir-sil', methods=['POST'])
+@admin_required
+def api_admin_turnir_sil():
+    data = request.get_json() or {}
+    if not validate_csrf_token(data.get('csrf_token', '')):
+        return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
+
+    turnir_id = data.get('turnir_id')
+    if not turnir_id:
+        return jsonify({'success': False, 'message': 'Turnir ID hökmany!'})
+
+    db = get_db()
+    
+    # Bu turnire bagly gatnaşyjylaryň turnir_id-sini NULL etmek
+    db.execute('UPDATE katilimcilar SET turnir_id = NULL WHERE turnir_id = ?', (turnir_id,))
+    
+    # Turniri pozmak
+    db.execute('DELETE FROM turnirler WHERE id = ?', (turnir_id,))
+    db.commit()
+
+    logger.info(f"Turnir pozuldy: ID {turnir_id}")
+    return jsonify({'success': True, 'message': 'Turnir üstünlikli pozuldy!'})
+
 
 @app.route('/api/admin-ayarlari-kaydet', methods=['POST'])
 @admin_required
@@ -696,6 +1122,8 @@ def api_admin_ayarlari_kaydet():
     logger.info("Ayarlar üýtgedildi")
     return jsonify({'success': True, 'message': 'Ayarlar üstünlikli saklandy!'})
 
+
+# ÜÝTGETME: Tassyklanynda gatnaşyjylaryň sanyna goşulýar
 @app.route('/api/admin-onayla', methods=['POST'])
 @admin_required
 def api_admin_onayla():
@@ -709,10 +1137,16 @@ def api_admin_onayla():
     if not kat:
         return jsonify({'success': False, 'message': 'Katylyjy tapylmady!'})
 
+    # Eger ulanyjynyň turnir_id-si ýok bolsa, tassyklamak bolanok
+    if not kat['turnir_id']:
+        return jsonify({'success': False, 'message': 'Katylyjy entek turnira goşulmadyk!'})
+
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     db.execute("UPDATE katilimcilar SET admin_onay = 1, onay_tarihi = ? WHERE referans_kodu = ?", (now, ref))
     db.commit()
 
+    # ÜÝTGETME: Tassyklanan gatnaşyjylaryň sany artýar (get_stats-da onaylanan sanalýar)
+    
     msg = f"✅ <b>TASSYKLANDY!</b>\n\n👤 {kat['ad']}\n🔑 {ref}\n📅 {now}"
     send_telegram_message(msg)
     logger.info(f"Onay: {ref}")
@@ -774,52 +1208,17 @@ def api_admin_poz():
     return jsonify({'success': True, 'message': 'Katylyjy pozuldy!'})
 
 
-@app.route('/api/katilimci/me')
-@login_required
-def api_katilimci_me():
-    ref = session.get('user_ref')
-    if not ref:
-        return jsonify({'success': False, 'message': 'Giris edilmedi'}), 401
-    db = get_db()
-    kat = db.execute("""
-        SELECT k.*, t.takim_adi 
-        FROM katilimcilar k
-        LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
-        WHERE k.referans_kodu = ?
-    """, (ref,)).fetchone()
-    if not kat:
-        session.clear()
-        return jsonify({'success': False, 'message': 'Katylyjy tapylmady'}), 404
-    return jsonify({'success': True, 'katilimci': dict(kat)})
-
-@app.route('/api/katilimci/<ref_code>')
-@login_required
-def api_katilimci(ref_code):
-    db = get_db()
-    kat = db.execute("""
-        SELECT k.referans_kodu, k.ad, k.telefon, k.takim_kodu, k.admin_onay, t.takim_adi 
-        FROM katilimcilar k
-        LEFT JOIN takimlar t ON k.takim_kodu = t.takim_kodu
-        WHERE k.referans_kodu = ?
-    """, (ref_code,)).fetchone()
-    if not kat:
-        return jsonify({'success': False})
-    return jsonify({'success': True, 'katilimci': dict(kat)})
-
-@app.route('/api/csrf-token')
-def api_csrf_token():
-    return jsonify({'success': True, 'csrf_token': generate_csrf_token()})
-
 # ===================== NEW ROUTES =====================
 
-@app.route('/turnir')
-def turnir():
-    return render_template('turnir.html')
-
-@app.route('/turnir/gosul')
-@login_required
-def turnir_gosul():
-    return render_template('turnir_gosul.html')
+# ÜÝTGETME: Turnir detaylaryny getirmek (admin panelde edit üçin)
+@app.route('/api/turnir-detay/<int:turnir_id>')
+@admin_required
+def api_turnir_detay(turnir_id):
+    db = get_db()
+    turnir = db.execute('SELECT * FROM turnirler WHERE id = ?', (turnir_id,)).fetchone()
+    if not turnir:
+        return jsonify({'success': False, 'message': 'Turnir tapylmady!'})
+    return jsonify({'success': True, 'turnir': dict(turnir)})
 
 @app.route('/magazyn')
 def magazyn():
@@ -829,40 +1228,6 @@ def magazyn():
 def menyu():
     return render_template('menyu.html')
 
-@app.route('/api/turnir-goşul', methods=['POST'])
-@login_required
-@limiter.limit("3 per minute")
-def api_turnir_gosul():
-    data = request.get_json() or {}
-
-    if not validate_csrf_token(data.get('csrf_token', '')):
-        return jsonify({'success': False, 'message': 'CSRF token nadogry!'})
-
-    pubg_id = sanitize(data.get('pubg_id', ''), 20)
-    payment_phone = str(data.get('payment_phone', '')).strip()
-    tournament_id = sanitize(data.get('tournament_id', ''), 50)
-
-    # FIX: PUBG ID diňe san bolmaly
-    if not pubg_id or len(pubg_id) < 8 or not pubg_id.isdigit():
-        return jsonify({'success': False, 'message': 'PUBG ID diňe san bolmaly (minimum 8)!'})
-
-    valid, phone_clean = validate_phone(payment_phone)
-    if not valid:
-        return jsonify({'success': False, 'message': 'Telefon belgisi nadogry!'})
-
-    ref = session.get('user_ref', '')
-    db = get_db()
-
-    # Update user's PUBG ID and payment phone
-    db.execute("""
-        UPDATE katilimcilar 
-        SET pubg_id = ?, payment_phone = ?, tournament_id = ?
-        WHERE referans_kodu = ?
-    """, (pubg_id, phone_clean, tournament_id, ref))
-    db.commit()
-
-    logger.info(f"Turnir goşul: {ref} -> {tournament_id}")
-    return jsonify({'success': True, 'message': 'Turnira goşuldyňyz!'})
 
 # ===================== START =====================
 

@@ -594,8 +594,8 @@ def logout():
     session.pop('user_ref', None)
     session.pop('user_telefon', None)
     return redirect(url_for('index'))
-    
-    @app.route('/profil')
+
+@app.route('/profil')
 @login_required
 def profil():
     ref_code = session.get('user_ref')
@@ -927,8 +927,8 @@ def api_katilimci(ref_code):
 @app.route('/api/csrf-token')
 def api_csrf_token():
     return jsonify({'success': True, 'csrf_token': generate_csrf_token()})
-    
-    @app.route('/admin')
+
+@app.route('/admin')
 def admin_login():
     return render_template('admin_login.html')
 
@@ -1198,8 +1198,8 @@ def magazyn():
 @app.route('/menyu')
 def menyu():
     return render_template('menyu.html')
-    
-    with app.app_context():
+
+with app.app_context():
     init_db()
 
 if __name__ == '__main__':

@@ -9,136 +9,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Turnir sanawy */
-        .turnir-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .turnir-admin-card {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            transition: all 0.3s;
-        }
-        .turnir-admin-card:hover {
-            border-color: rgba(255, 45, 85, 0.2);
-        }
-        .turnir-admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-        .turnir-admin-header h4 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #e8e8e8;
-        }
-        .turnir-admin-header .status-badge {
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        .turnir-admin-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .turnir-admin-info p {
-            font-size: 12px;
-            opacity: 0.7;
-            color: #a0a0c0;
-        }
-        .turnir-admin-info p strong {
-            color: #ff8c00;
-        }
-        .turnir-admin-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .btn-edit {
-            flex: 1;
-            padding: 10px;
-            background: rgba(0, 150, 255, 0.15);
-            border: 1px solid rgba(0, 150, 255, 0.3);
-            border-radius: 10px;
-            color: #0096ff;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-edit:hover {
-            background: rgba(0, 150, 255, 0.25);
-        }
-        .btn-delete-turnir {
-            flex: 1;
-            padding: 10px;
-            background: rgba(255, 45, 85, 0.15);
-            border: 1px solid rgba(255, 45, 85, 0.3);
-            border-radius: 10px;
-            color: #ff2d55;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .btn-delete-turnir:hover {
-            background: rgba(255, 45, 85, 0.25);
-        }
-        /* Modal */
-        .admin-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .admin-modal.active {
-            display: flex;
-        }
-        .admin-modal-content {
-            background: linear-gradient(135deg, #12121a, #0d0d15);
-            border-radius: 24px;
-            padding: 32px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 45, 85, 0.2);
-        }
-        .admin-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-        .admin-modal-header h3 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 18px;
-            color: #ff2d55;
-        }
-        .modal-close-btn {
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 24px;
-            cursor: pointer;
-        }
+        .turnir-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+        .turnir-admin-card { background: rgba(255, 255, 255, 0.02); border-radius: 16px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.06); transition: all 0.3s; }
+        .turnir-admin-card:hover { border-color: rgba(255, 45, 85, 0.2); }
+        .turnir-admin-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .turnir-admin-header h4 { font-size: 16px; font-weight: 700; color: #e8e8e8; }
+        .turnir-admin-header .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .turnir-admin-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .turnir-admin-info p { font-size: 12px; opacity: 0.7; color: #a0a0c0; }
+        .turnir-admin-info p strong { color: #ff8c00; }
+        .turnir-admin-actions { display: flex; gap: 10px; }
+        .btn-edit { flex: 1; padding: 10px; background: rgba(0, 150, 255, 0.15); border: 1px solid rgba(0, 150, 255, 0.3); border-radius: 10px; color: #0096ff; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-edit:hover { background: rgba(0, 150, 255, 0.25); }
+        .btn-delete-turnir { flex: 1; padding: 10px; background: rgba(255, 45, 85, 0.15); border: 1px solid rgba(255, 45, 85, 0.3); border-radius: 10px; color: #ff2d55; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+        .btn-delete-turnir:hover { background: rgba(255, 45, 85, 0.25); }
+        .admin-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .admin-modal.active { display: flex; }
+        .admin-modal-content { background: linear-gradient(135deg, #12121a, #0d0d15); border-radius: 24px; padding: 32px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; border: 1px solid rgba(255, 45, 85, 0.2); }
+        .admin-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .admin-modal-header h3 { font-family: 'Orbitron', sans-serif; font-size: 18px; color: #ff2d55; }
+        .modal-close-btn { background: none; border: none; color: rgba(255, 255, 255, 0.5); font-size: 24px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -164,14 +54,12 @@
             </div>
         </header>
 
-        <!-- 4 ÇYZYKLY KATEGORIÝA -->
         <div class="admin-tabs">
             <button class="admin-tab-btn active" onclick="showAdminTab('turnir', this)" type="button"><i class="fas fa-calendar-alt"></i> Turnirler</button>
             <button class="admin-tab-btn" onclick="showAdminTab('katilimci', this)" type="button"><i class="fas fa-users"></i> Katylymcylar</button>
             <button class="admin-tab-btn" onclick="showAdminTab('topar', this)" type="button"><i class="fas fa-trophy"></i> Toparlar</button>
         </div>
-
-        <!-- TAB 1: TURNIRLER (TÄZE) -->
+        
         <div id="tab-turnir" class="admin-tab-content active">
             <section class="admin-section">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
@@ -187,7 +75,10 @@
                     <div class="turnir-admin-card">
                         <div class="turnir-admin-header">
                             <h4>{{ t.ad }}</h4>
-                            <span class="status-badge status-{{ t.status }}">{{ t.status }}</span>
+                            <div style="display:flex; gap:6px;">
+                                {% if t.tolekli == 0 %}<span class="status-badge" style="background:rgba(0,200,83,0.15); color:#00c853; border:1px solid rgba(0,200,83,0.3);">TÖLEGSIZ</span>{% endif %}
+                                <span class="status-badge status-{{ t.status }}">{{ t.status }}</span>
+                            </div>
                         </div>
                         <div class="turnir-admin-info">
                             <p><strong>Sene:</strong> {{ t.senesi }}</p>
@@ -214,7 +105,6 @@
             </section>
         </div>
         
-                <!-- TAB 2: KATYLYMCYLAR -->
         <div id="tab-katilimci" class="admin-tab-content">
             <section class="admin-section">
                 <h2>Katylymcylar ({{ katilimcilar|length }})</h2>
@@ -256,7 +146,6 @@
             </section>
         </div>
 
-        <!-- TAB 3: TOPARLAR -->
         <div id="tab-topar" class="admin-tab-content">
             <section class="admin-section">
                 <h2>Toparlar ({{ takimlar|length }})</h2>
@@ -278,7 +167,6 @@
         </div>
     </div>
 
-    <!-- TÄZE TURNIR / ÜÝTGETME MODAL -->
     <div class="admin-modal" id="turnir-modal">
         <div class="admin-modal-content">
             <div class="admin-modal-header">
@@ -345,6 +233,13 @@
                     <input type="text" id="turnir-bjemi" placeholder="Mysal: 500 M">
                 </div>
                 <div class="ayar-group">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" id="turnir-tolekli" checked style="width:20px; height:20px; accent-color:#ff2d55;">
+                        <span>Tölegli Turnir</span>
+                    </label>
+                    <small style="font-size:11px; opacity:0.6; display:block; margin-top:4px;">Tölegsiz turnirde ulanyjy gönümen tassyklanýar</small>
+                </div>
+                <div class="ayar-group">
                     <label>Status</label>
                     <select id="turnir-status" style="width:100%; padding:14px 16px; background:rgba(255,255,255,0.04); border:2px solid rgba(255,255,255,0.08); border-radius:12px; color:#e8e8e8; font-size:15px; font-family:'Rajdhani',sans-serif;">
                         <option value="upcoming">Gelejek</option>
@@ -358,8 +253,8 @@
             </form>
         </div>
     </div>
-
-    <script>
+    
+        <script>
         let csrfToken = '';
         async function getCsrfToken() {
             try {
@@ -377,7 +272,6 @@
             if (btn) btn.classList.add('active');
         }
 
-        // ========== TURNIR MODAL ==========
         function openTurnirModal() {
             document.getElementById('modal-title').textContent = 'Täze Turnir';
             document.getElementById('modal-turnir-id').value = '';
@@ -390,10 +284,7 @@
         }
 
         function editTurnir(id) {
-            // Serverden turnir maglumatlaryny almak
-            fetch('/api/turnir-detay/' + id, {
-                credentials: 'same-origin'
-            })
+            fetch('/api/turnir-detay/' + id, { credentials: 'same-origin' })
             .then(r => r.json())
             .then(result => {
                 if (result.success) {
@@ -414,6 +305,7 @@
                     document.getElementById('turnir-b3').value = t.bayrak_3;
                     document.getElementById('turnir-bjemi').value = t.bayrak_jemi;
                     document.getElementById('turnir-status').value = t.status;
+                    document.getElementById('turnir-tolekli').checked = t.tolekli === 1;
                     document.getElementById('turnir-modal').classList.add('active');
                 }
             })
@@ -459,13 +351,11 @@
                 bayrak_3: document.getElementById('turnir-b3').value,
                 bayrak_jemi: document.getElementById('turnir-bjemi').value,
                 status: document.getElementById('turnir-status').value,
+                tolekli: document.getElementById('turnir-tolekli').checked,
                 csrf_token: csrfToken
             };
 
-            if (isEdit) {
-                data.turnir_id = parseInt(turnirId);
-            }
-
+            if (isEdit) data.turnir_id = parseInt(turnirId);
             const url = isEdit ? '/api/admin-turnir-guncelle' : '/api/admin-turnir-ekle';
 
             try {
@@ -476,16 +366,11 @@
                     credentials: 'same-origin'
                 });
                 const result = await response.json();
-                if (result.success) {
-                    closeTurnirModal();
-                    location.reload();
-                } else {
-                    alert(result.message);
-                }
+                if (result.success) { closeTurnirModal(); location.reload(); }
+                else alert(result.message);
             } catch (error) { alert('Yalnyslyk: ' + error.message); }
         });
 
-        // ========== KATYLYMCY ISLEMLERI ==========
         async function onayla(refCode) {
             if (!csrfToken) { alert('CSRF token tapylmady.'); return; }
             if (!confirm('Tassyklamak isleyarsinizmi?')) return;

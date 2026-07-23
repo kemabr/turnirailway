@@ -126,7 +126,7 @@
                 <p class="profile-ref">{{ katilimci['referans_kodu'] }}</p>
             </div>
         </div>
-
+        
         <div class="status-card">
             <h3>STATUSYM</h3>
             <div class="status-steps">
@@ -168,8 +168,8 @@
             <a href="/odeme" class="btn-primary" style="margin-top:15px;">TOLEGE GIT</a>
             {% endif %}
         </div>
-
-        <div class="team-section">
+        
+          <div class="team-section">
             <h3>TOPARYM</h3>
             {% if katilimci['takim_kodu'] %}
                 <div class="team-card">
@@ -192,10 +192,8 @@
                 </div>
             {% endif %}
         </div>
-
-
-
-        <div class="logout-section">
+        
+             <div class="logout-section">
             <form action="/logout" method="POST" onsubmit="return confirm('Hakykatdanam cykmak isleyarsinizmi?');">
                 <button type="submit" class="logout-btn-pro">
                     <i class="fas fa-sign-out-alt"></i>
@@ -246,4 +244,4 @@
         </div>
     </nav>
 </body>
-</html>
+</html>                     

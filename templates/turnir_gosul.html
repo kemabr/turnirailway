@@ -114,7 +114,6 @@
         .bottom-nav-item.active {
             color: #ff2d55;
         }
-        /* Turnir ID gizlenen input */
         .hidden-input {
             display: none;
         }
@@ -136,7 +135,6 @@
             <p>Maglumatlaryňyzy dolduryň</p>
         </header>
         
-        <!-- Tournament Summary - Dinamik -->
         <div class="tournament-summary">
             <h3><i class="fas fa-trophy"></i> {{ turnir.ad }}</h3>
             <p><strong>Sene:</strong> {{ turnir.senesi }}</p>
@@ -145,142 +143,6 @@
             <p><strong>Gatnaşyk:</strong> {{ turnir.gatnasym }}</p>
             <p><strong>Toleg:</strong> {{ turnir.tolek }}</p>
         </div>
-
-        <!-- Join Form -->
-        <form id="join-tournament-form" class="join-form" novalidate>
-            <!-- Gizlenen turnir_id -->
-            <input type="hidden" id="turnir_id" value="{{ turnir.id }}">
-            
-            <div class="form-group">
-                <label for="pubg_id"><i class="fas fa-gamepad"></i> PUBG ID</label>
-                <input type="text" id="pubg_id" placeholder="PUBG ID girizin (8-12 san)" required 
-                       minlength="8" maxlength="12" pattern="[0-9]{8,12}" autocomplete="off">
-                <small class="form-hint">Oýundaky ID belginiz (8-12 sany san)</small>
-            </div>
-
-            <div class="form-group">
-                <label for="payment_phone"><i class="fas fa-mobile-alt"></i> Toleg Telefon Belgisi</label>
-                <input type="tel" id="payment_phone" placeholder="TMCell belginiz" required 
-                       maxlength="20" autocomplete="tel">
-                <small class="form-hint">TMCell belginiz (toleg etmek üçin)</small>
-            </div>
-            
-            <div class="payment-info-box">
-                <h4><i class="fas fa-info-circle"></i> Toleg Maglumatlary</h4>
-                <p>Gatnasik tolegi: <strong>{{ turnir.tolek }}</strong></p>
-                <p>Toleg usuly: <strong>{{ turnir.tolek_usuly }}</strong></p>
-                <p>Toleg etjek belgi: <strong id="display-phone">-</strong></p>
-            </div>
-
-            <button type="submit" class="btn-submit" id="submit-btn">
-                <span class="btn-text">TÖLEGE GIT</span>
-            </button>
-        </form>
-    </div>
-    
-        <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <div class="bottom-nav-container">
-            <a href="/" class="bottom-nav-item">
-                <i class="fas fa-home"></i>
-                <span>Esasy</span>
-            </a>
-            <a href="/turnir" class="bottom-nav-item active">
-                <i class="fas fa-trophy"></i>
-                <span>Turnir</span>
-            </a>
-            <a href="/magazyn" class="bottom-nav-item">
-                <i class="fas fa-shopping-cart"></i>
-                <span>Magazyn</span>
-            </a>
-            <a href="/menyu" class="bottom-nav-item">
-                <i class="fas fa-bars"></i>
-                <span>Menýu</span>
-            </a>
-        </div>
-    </nav>
-    
-        <script>
-        let csrfToken = '';
-
-        async function getCsrfToken() {
-            try {
-                const response = await fetch('/api/csrf-token');
-                const result = await response.json();
-                if (result.success) csrfToken = result.csrf_token;
-            } catch (error) {
-                console.error('CSRF token almakda yalnyslyk:', error);
-            }
-        }
-
-        getCsrfToken();
-
-        // Update displayed phone number
-        document.getElementById('payment_phone').addEventListener('input', function(e) {
-            document.getElementById('display-phone').textContent = e.target.value || '-';
-        });
-
-        document.getElementById('join-tournament-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const pubgId = document.getElementById('pubg_id').value.trim();
-            const paymentPhone = document.getElementById('payment_phone').value.trim();
-            const turnirId = document.getElementById('turnir_id').value;
-
-            if (!pubgId || pubgId.length < 8) {
-                alert('PUBG ID 8 sanly bolmaly!');
-                return;
-            }
-
-            if (!paymentPhone) {
-                alert('Toleg telefon belgisini girizin!');
-                return;
-            }
-
-            if (!turnirId) {
-                alert('Turnir ID tapylmady!');
-                return;
-            }
-
-            if (!csrfToken) {
-                alert('CSRF token tapylmady. Sahypany tezeleyn.');
-                await getCsrfToken();
-                return;
-            }
-
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = true;
-
-            try {
-                const response = await fetch('/api/turnir-goşul', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        turnir_id: parseInt(turnirId),
-                        tournament_id: 'turnir-' + turnirId,
-                        pubg_id: pubgId,
-                        payment_phone: paymentPhone,
-                        csrf_token: csrfToken
-                    }),
-                    credentials: 'same-origin'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    window.location.href = '/odeme?turnir=' + turnirId;
-                } else {
-                    alert(result.message || 'Yalnyslyk yuze cykdy');
-                    btn.disabled = false;
-                }
-            } catch (error) {
-                alert('Yalnyslyk: ' + error.message);
-                btn.disabled = false;
-            }
-        });
-    </script>
-</body>
-</html>
 
         <form id="join-tournament-form" class="join-form" novalidate>
             <input type="hidden" id="turnir_id" value="{{ turnir.id }}">

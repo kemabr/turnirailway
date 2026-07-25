@@ -8,40 +8,232 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 45, 85, 0.15); padding: 8px 0 12px; }
-        .bottom-nav-container { max-width: 480px; margin: 0 auto; display: flex; justify-content: space-around; align-items: center; }
-        .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 10px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; padding: 4px 12px; border-radius: 12px; }
+        * { box-sizing: border-box; }
+
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; 
+            background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(20px); 
+            border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 8px 0 16px; 
+        }
+        .bottom-nav-container { 
+            max-width: 480px; margin: 0 auto; display: flex; 
+            justify-content: space-around; align-items: center; 
+        }
+        .bottom-nav-item { 
+            display: flex; flex-direction: column; align-items: center; gap: 4px; 
+            color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px; 
+            font-family: 'Rajdhani', sans-serif; font-weight: 700; 
+            text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; 
+            padding: 4px 12px; border-radius: 12px; 
+        }
         .bottom-nav-item i { font-size: 20px; }
         .bottom-nav-item.active { color: #ff2d55; }
-        .bottom-nav-item:hover { color: #ff2d55; }
-        .tournament-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 80px; }
-        .tournament-card { background: rgba(255, 255, 255, 0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.06); position: relative; overflow: hidden; transition: all 0.3s; }
-        .tournament-card:hover { border-color: rgba(255, 45, 85, 0.2); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 45, 85, 0.1); }
-        .tournament-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #ff2d55, #ff6b35, #ff8c00, #ff2d55); background-size: 200% 100%; animation: progress-shimmer 3s linear infinite; }
-        .tournament-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-        .tournament-info h3 { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #e8e8e8; margin-bottom: 6px; letter-spacing: 1px; }
-        .tournament-info p { font-size: 13px; opacity: 0.6; color: #a0a0c0; }
-        .tournament-prize { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; color: #0096ff; text-shadow: 0 0 15px rgba(0, 150, 255, 0.3); }
-        .tournament-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 12px 0; border-top: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05); flex-wrap: wrap; gap: 8px; }
-        .tournament-meta span { font-size: 12px; opacity: 0.7; color: #a0a0c0; display: flex; align-items: center; gap: 6px; }
-        .tournament-meta span i { color: #ff2d55; }
-        .btn-join-tournament { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #ff2d55, #ff6b35); border: none; border-radius: 14px; color: white; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 14px; text-align: center; text-transform: uppercase; letter-spacing: 3px; cursor: pointer; box-shadow: 0 8px 30px rgba(255, 45, 85, 0.4); transition: all 0.3s; text-decoration: none; }
-        .btn-join-tournament:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255, 45, 85, 0.5); }
-        .btn-full { background: linear-gradient(135deg, #6b7280, #4b5563) !important; box-shadow: none !important; cursor: not-allowed !important; }
-        .tournament-tabs { display: flex; gap: 10px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
-        .tournament-tabs::-webkit-scrollbar { display: none; }
-        .tournament-tab { padding: 12px 20px; background: rgba(255, 255, 255, 0.04); border: 2px solid rgba(255, 255, 255, 0.08); border-radius: 14px; color: #e8e8e8; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 11px; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
-        .tournament-tab.active { background: linear-gradient(135deg, #ff2d55, #ff6b35); border-color: #ff2d55; box-shadow: 0 4px 20px rgba(255, 45, 85, 0.3); }
-        .mode-filter { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 12px;
+        }
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff2d55;
+            letter-spacing: 3px;
+            margin: 0;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .header-btn {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #e8e8e8;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; cursor: pointer; transition: all 0.3s;
+            text-decoration: none;
+        }
+        .header-btn:hover {
+            background: rgba(255,45,85,0.15);
+            border-color: rgba(255,45,85,0.3);
+            color: #ff2d55;
+        }
+
+        /* Mode filter - radio style */
+        .mode-filter { 
+            display: flex; gap: 10px; margin-bottom: 20px; 
+            overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; 
+        }
         .mode-filter::-webkit-scrollbar { display: none; }
-        .mode-btn { padding: 10px 18px; background: rgba(255, 255, 255, 0.03); border: 1.5px solid rgba(255, 255, 255, 0.08); border-radius: 25px; color: #e8e8e8; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
-        .mode-btn.active { background: rgba(255, 45, 85, 0.15); border-color: #ff2d55; color: #ff2d55; }
-        .empty-state { text-align: center; padding: 60px 20px; }
-        .empty-state i { font-size: 64px; color: #ff2d55; margin-bottom: 20px; opacity: 0.3; }
-        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .mode-btn { 
+            padding: 10px 20px; background: transparent; 
+            border: 1.5px solid rgba(255,255,255,0.15); border-radius: 25px; 
+            color: rgba(255,255,255,0.6); font-family: 'Rajdhani', sans-serif; 
+            font-weight: 700; font-size: 14px; cursor: pointer; 
+            transition: all 0.3s; display: flex; align-items: center; gap: 8px; 
+            white-space: nowrap;
+        }
+        .mode-btn i { font-size: 14px; }
+        .mode-btn.active { 
+            border-color: #0096ff; color: #0096ff; 
+            background: rgba(0, 150, 255, 0.1); 
+        }
+
+        /* Tournament list */
+        .tournament-list { 
+            display: flex; flex-direction: column; gap: 14px; 
+            margin-bottom: 100px; padding-bottom: 20px;
+        }
+
+        /* Tournament card - horizontal */
+        .tournament-card { 
+            display: flex; gap: 16px;
+            background: linear-gradient(145deg, #1e1e2e, #181825); 
+            border-radius: 20px; padding: 16px; 
+            border: 1px solid rgba(255,255,255,0.05); 
+            position: relative; overflow: hidden;
+            transition: all 0.3s;
+        }
+        .tournament-card:hover {
+            border-color: rgba(255,45,85,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .tournament-card::before { 
+            content: ''; position: absolute; top: 0; left: 0; 
+            width: 4px; height: 100%; 
+            background: linear-gradient(to bottom, #ff2d55, #ff6b35); 
+            border-radius: 20px 0 0 20px; 
+        }
+
+        /* Left image */
+        .tournament-image { 
+            width: 76px; height: 76px; min-width: 76px;
+            background: linear-gradient(135deg, #2d1b4e, #1a102e); 
+            border-radius: 16px; display: flex; 
+            align-items: center; justify-content: center; 
+            border: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .tournament-image::after {
+            content: 'PUBG';
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            color: #ff8c00;
+            letter-spacing: 1px;
+            position: absolute;
+            bottom: 6px;
+        }
+        .tournament-image i {
+            font-size: 32px;
+            color: #ff8c00;
+            margin-bottom: 10px;
+        }
+
+        /* Right content */
+        .tournament-content { 
+            flex: 1; display: flex; flex-direction: column; gap: 6px;
+            min-width: 0;
+        }
+
+        .tournament-meta-top { 
+            display: flex; justify-content: space-between; align-items: center; 
+            font-size: 11px; color: #888; font-family: 'Rajdhani', sans-serif;
+            flex-wrap: wrap; gap: 6px;
+        }
+        .tournament-meta-top span { 
+            display: flex; align-items: center; gap: 4px; 
+        }
+        .tournament-meta-top i { font-size: 10px; color: #ff2d55; }
+
+        .status-badge-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
         .status-upcoming { background: rgba(0, 200, 83, 0.15); color: #00c853; border: 1px solid rgba(0, 200, 83, 0.3); }
         .status-current { background: rgba(255, 140, 0, 0.15); color: #ff8c00; border: 1px solid rgba(255, 140, 0, 0.3); }
         .status-past { background: rgba(107, 114, 128, 0.15); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.3); }
+
+        .tournament-title { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 14px; font-weight: 700; color: #fff; 
+            line-height: 1.3; letter-spacing: 0.5px;
+            margin: 2px 0;
+        }
+
+        .tournament-prize-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2px 0 6px;
+        }
+
+        .tournament-prize { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 22px; font-weight: 900; color: #0096ff; 
+            text-shadow: 0 0 15px rgba(0, 150, 255, 0.3);
+        }
+        .tournament-prize small {
+            font-size: 12px;
+            color: #0096ff;
+            opacity: 0.8;
+        }
+
+        .tournament-free-badge {
+            font-size: 10px;
+            font-weight: 700;
+            color: #00c853;
+            background: rgba(0, 200, 83, 0.1);
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 200, 83, 0.2);
+        }
+
+        .tournament-btn { 
+            width: 100%; padding: 14px; 
+            background: #fff; border: none; border-radius: 14px; 
+            color: #000; font-family: 'Orbitron', sans-serif; 
+            font-weight: 800; font-size: 13px; text-align: center; 
+            text-transform: uppercase; letter-spacing: 2px; 
+            cursor: pointer; transition: all 0.3s; 
+            text-decoration: none; display: block;
+        }
+        .tournament-btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(255,255,255,0.15); 
+        }
+        .tournament-btn:disabled { 
+            background: #3a3a4a; color: #777; 
+            cursor: not-allowed; transform: none; box-shadow: none; 
+        }
+        .tournament-btn.free-btn {
+            background: linear-gradient(135deg, #00c853, #00a844);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0,200,83,0.3);
+        }
+        .tournament-btn.free-btn:hover {
+            box-shadow: 0 10px 30px rgba(0,200,83,0.4);
+        }
+
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state i { font-size: 64px; color: #ff2d55; margin-bottom: 20px; opacity: 0.3; }
+        .empty-state h3 { font-family: 'Orbitron', sans-serif; font-size: 16px; color: #e8e8e8; margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; opacity: 0.5; color: #a0a0c0; }
     </style>
 </head>
 <body>
@@ -54,59 +246,78 @@
     </div>
 
     <div class="container main-content">
-        <header class="form-header" style="padding: 20px 0 16px;">
-            <h1 style="font-family: 'Orbitron', sans-serif; font-size: 22px; color: #ff2d55; letter-spacing: 3px;">TURNIRLER</h1>
-            <p style="opacity:0.7; font-size:14px;">Gatnaşmak isleýän turniriňizi saýlaň</p>
-        </header>
-
-        <div class="tournament-tabs">
-            <button class="tournament-tab active" onclick="filterTournaments('all', this)" type="button">Hemme</button>
-            <button class="tournament-tab" onclick="filterTournaments('upcoming', this)" type="button">Gelejek</button>
-            <button class="tournament-tab" onclick="filterTournaments('current', this)" type="button">Häzirki</button>
-            <button class="tournament-tab" onclick="filterTournaments('past', this)" type="button">Geçen</button>
+        <!-- Header -->
+        <div class="page-header">
+            <h1>TURNIRLER</h1>
+            <div class="header-actions">
+                <a href="/profil" class="header-btn"><i class="fas fa-user"></i></a>
+            </div>
         </div>
 
+        <!-- Mode Filter -->
         <div class="mode-filter">
-            <button class="mode-btn active" onclick="filterMode('all', this)" type="button"><i class="fas fa-th"></i> Hemme</button>
-            <button class="mode-btn" onclick="filterMode('solo', this)" type="button"><i class="fas fa-user"></i> Solo</button>
-            <button class="mode-btn" onclick="filterMode('duo', this)" type="button"><i class="fas fa-user-friends"></i> Duo</button>
-            <button class="mode-btn" onclick="filterMode('squad', this)" type="button"><i class="fas fa-users"></i> Squad</button>
+            <button class="mode-btn active" onclick="filterMode('all', this)" type="button">
+                <i class="fas fa-th"></i> Hemme
+            </button>
+            <button class="mode-btn" onclick="filterMode('solo', this)" type="button">
+                <i class="fas fa-user"></i> Solo
+            </button>
+            <button class="mode-btn" onclick="filterMode('duo', this)" type="button">
+                <i class="fas fa-user-friends"></i> Duo
+            </button>
+            <button class="mode-btn" onclick="filterMode('squad', this)" type="button">
+                <i class="fas fa-users"></i> Squad
+            </button>
         </div>
 
+        <!-- Tournament List -->
         <div class="tournament-list" id="tournament-list">
             {% if turnirler %}
                 {% for t in turnirler %}
-                <div class="tournament-card" data-status="{{ t.status }}" data-mode="{{ t.mode }}">
-                    <div class="tournament-header">
-                        <div class="tournament-info">
-                            <h3>{{ t.ad }}</h3>
-                            <p>
-                                {% if t.tolekli == 0 %}<span class="status-badge" style="background:rgba(0,200,83,0.15); color:#00c853; border:1px solid rgba(0,200,83,0.3);">TÖLEGSIZ</span>{% endif %}
-                                <span class="status-badge status-{{ t.status }}">{{ t.status }}</span>
-                            </p>
+                <div class="tournament-card" data-mode="{{ t.mode }}" data-status="{{ t.status }}">
+                    <!-- Left Image -->
+                    <div class="tournament-image">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+
+                    <!-- Right Content -->
+                    <div class="tournament-content">
+                        <!-- Meta top -->
+                        <div class="tournament-meta-top">
+                            <span><i class="fas fa-calendar"></i> {{ t.senesi }} {{ t.wagty }}</span>
+                            <span><i class="fas fa-users"></i> {{ t.onaylanan }}/{{ t.yer_sany }}</span>
+                            <span><i class="fas fa-gamepad"></i> {{ t.mode|upper }}</span>
+                            <span class="status-badge-inline status-{{ t.status }}">{{ t.status }}</span>
                         </div>
-                        <div class="tournament-prize">{{ t.bayrak_jemi }}</div>
+
+                        <!-- Title -->
+                        <div class="tournament-title">{{ t.ad }}</div>
+
+                        <!-- Prize row -->
+                        <div class="tournament-prize-row">
+                            {% if t.tolekli == 0 %}
+                                <span class="tournament-free-badge">TÖLEGSIZ</span>
+                            {% else %}
+                                <span style="font-size: 11px; color: #666;">{{ t.tolek }}</span>
+                            {% endif %}
+                            <div class="tournament-prize">{{ t.bayrak_jemi }}</div>
+                        </div>
+
+                        <!-- Button -->
+                        {% if t.onaylanan >= t.yer_sany %}
+                            <button class="tournament-btn" type="button" disabled>
+                                <i class="fas fa-lock"></i> YERLER DOLDY
+                            </button>
+                        {% elif t.tolekli == 0 %}
+                            <button class="tournament-btn free-btn" onclick="joinTournament({{ t.id }})" type="button">
+                                <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
+                            </button>
+                        {% else %}
+                            <button class="tournament-btn" onclick="joinTournament({{ t.id }})" type="button">
+                                <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
+                            </button>
+                        {% endif %}
                     </div>
-                    <div class="tournament-meta">
-                        <span><i class="fas fa-calendar"></i> {{ t.senesi }}</span>
-                        <span><i class="fas fa-clock"></i> {{ t.wagty }}</span>
-                        <span><i class="fas fa-users"></i> {{ t.onaylanan }}/{{ t.yer_sany }}</span>
-                        <span><i class="fas fa-gamepad"></i> {{ t.gatnasym }}</span>
-                    </div>
-                    
-                    {% if t.onaylanan >= t.yer_sany %}
-                        <button class="btn-join-tournament btn-full" type="button" disabled>
-                            <i class="fas fa-lock"></i> YERLER DOLDY
-                        </button>
-                    {% elif t.tolekli == 0 %}
-                        <button class="btn-join-tournament" style="background:linear-gradient(135deg, #00c853, #00a844); box-shadow: 0 8px 30px rgba(0,200,83,0.4);" onclick="joinTournament({{ t.id }})" type="button">
-                            <i class="fas fa-plus-circle"></i> TÖLEGSIZ GOŞUL
-                        </button>
-                    {% else %}
-                        <button class="btn-join-tournament" onclick="joinTournament({{ t.id }})" type="button">
-                            <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
-                        </button>
-                    {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
@@ -118,8 +329,9 @@
             {% endif %}
         </div>
     </div>
- 
-     <nav class="bottom-nav">
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
         <div class="bottom-nav-container">
             <a href="/" class="bottom-nav-item">
                 <i class="fas fa-home"></i>
@@ -146,12 +358,9 @@
 
         async function checkLoginStatus() {
             if (loginCheckPromise) return loginCheckPromise;
-
             loginCheckPromise = new Promise(async (resolve) => {
                 try {
-                    const response = await fetch('/api/katilimci/me', {
-                        credentials: 'same-origin'
-                    });
+                    const response = await fetch('/api/katilimci/me', { credentials: 'same-origin' });
                     if (response.ok) {
                         const result = await response.json();
                         isUserLoggedIn = result.success === true;
@@ -159,12 +368,10 @@
                         isUserLoggedIn = false;
                     }
                 } catch (error) {
-                    console.log('Login check failed');
                     isUserLoggedIn = false;
                 }
                 resolve(isUserLoggedIn);
             });
-
             return loginCheckPromise;
         }
 
@@ -172,7 +379,6 @@
 
         async function joinTournament(turnirId) {
             await checkLoginStatus();
-
             if (!isUserLoggedIn) {
                 window.location.href = '/login?redirect=/turnir';
                 return;
@@ -180,44 +386,30 @@
             window.location.href = '/turnir/gosul?id=' + turnirId;
         }
 
-        function filterTournaments(status, btn) {
-            document.querySelectorAll('.tournament-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-
-            document.querySelectorAll('.tournament-card').forEach(card => {
-                if (status === 'all' || card.dataset.status === status) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-            
-            checkEmptyState();
-        }
-
         function filterMode(mode, btn) {
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            document.querySelectorAll('.tournament-card').forEach(card => {
+            const cards = document.querySelectorAll('.tournament-card');
+            let visible = 0;
+            cards.forEach(card => {
                 if (mode === 'all' || card.dataset.mode === mode) {
-                    card.style.display = 'block';
+                    card.style.display = 'flex';
+                    visible++;
                 } else {
                     card.style.display = 'none';
                 }
             });
-            
-            checkEmptyState();
+
+            checkEmptyState(visible);
         }
 
-        function checkEmptyState() {
-            const visibleCards = document.querySelectorAll('.tournament-card[style*="block"]');
+        function checkEmptyState(visibleCount) {
             const list = document.getElementById('tournament-list');
-            
             const existingEmpty = list.querySelector('.empty-state');
             if (existingEmpty) existingEmpty.remove();
-            
-            if (visibleCards.length === 0) {
+
+            if (visibleCount === 0) {
                 const emptyDiv = document.createElement('div');
                 emptyDiv.className = 'empty-state';
                 emptyDiv.innerHTML = `
@@ -230,4 +422,4 @@
         }
     </script>
 </body>
-    </html>
+</html>

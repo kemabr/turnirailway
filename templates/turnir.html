@@ -8,12 +8,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
+        body {
+            background: #0a0a0f;
+            color: #e8e8e8;
+            font-family: 'Rajdhani', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Bottom nav */
         .bottom-nav { 
             position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; 
-            background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(20px); 
-            border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 8px 0 16px; 
+            background: rgba(15, 15, 22, 0.98); backdrop-filter: blur(20px); 
+            border-top: 1px solid rgba(255, 255, 255, 0.06); padding: 8px 0 20px; 
         }
         .bottom-nav-container { 
             max-width: 480px; margin: 0 auto; display: flex; 
@@ -21,10 +29,10 @@
         }
         .bottom-nav-item { 
             display: flex; flex-direction: column; align-items: center; gap: 4px; 
-            color: rgba(255, 255, 255, 0.4); text-decoration: none; font-size: 10px; 
+            color: rgba(255, 255, 255, 0.35); text-decoration: none; font-size: 10px; 
             font-family: 'Rajdhani', sans-serif; font-weight: 700; 
             text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; 
-            padding: 4px 12px; border-radius: 12px; 
+            padding: 4px 10px; border-radius: 12px; 
         }
         .bottom-nav-item i { font-size: 20px; }
         .bottom-nav-item.active { color: #ff2d55; }
@@ -34,196 +42,213 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 0 20px;
+            padding: 16px 16px 20px;
+            max-width: 480px;
+            margin: 0 auto;
         }
         .page-header h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 900;
             color: #ff2d55;
             letter-spacing: 4px;
-            margin: 0;
         }
         .header-actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
         .header-btn {
-            width: 44px; height: 44px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
+            width: 42px; height: 42px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 14px;
-            color: #e8e8e8;
+            color: rgba(255,255,255,0.7);
             display: flex; align-items: center; justify-content: center;
             font-size: 18px; cursor: pointer; transition: all 0.3s;
             text-decoration: none;
         }
-        .header-btn:hover {
-            background: rgba(255,45,85,0.15);
-            border-color: rgba(255,45,85,0.3);
-            color: #ff2d55;
-        }
 
         /* Mode filter */
         .mode-filter { 
-            display: flex; gap: 10px; margin-bottom: 24px; 
-            overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; 
+            display: flex; gap: 10px; margin-bottom: 20px; 
+            overflow-x: auto; padding: 0 16px 4px; scrollbar-width: none;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .mode-filter::-webkit-scrollbar { display: none; }
 
         .mode-btn { 
-            padding: 10px 22px; background: transparent; 
+            padding: 10px 18px; background: transparent; 
             border: 1.5px solid rgba(255,255,255,0.15); border-radius: 25px; 
             color: rgba(255,255,255,0.6); font-family: 'Rajdhani', sans-serif; 
             font-weight: 700; font-size: 14px; cursor: pointer; 
             transition: all 0.3s; display: flex; align-items: center; gap: 8px; 
             white-space: nowrap;
         }
-        .mode-btn i { font-size: 14px; }
+        .mode-btn .radio-circle {
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+        }
+        .mode-btn .radio-circle::after {
+            content: '';
+            width: 6px; height: 6px;
+            background: transparent;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
         .mode-btn.active { 
             border-color: #0096ff; color: #0096ff; 
-            background: rgba(0, 150, 255, 0.1); 
+            background: rgba(0, 150, 255, 0.08); 
+        }
+        .mode-btn.active .radio-circle {
+            border-color: #0096ff;
+        }
+        .mode-btn.active .radio-circle::after {
+            background: #0096ff;
         }
 
         /* Tournament list */
         .tournament-list { 
-            display: flex; flex-direction: column; gap: 16px; 
-            margin-bottom: 100px; padding-bottom: 20px;
+            display: flex; flex-direction: column; gap: 14px; 
+            margin-bottom: 100px; padding: 0 16px 20px;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Tournament card */
         .tournament-card { 
             display: flex; gap: 16px;
-            background: linear-gradient(145deg, #1a1a28, #151520); 
-            border-radius: 24px; padding: 18px; 
-            border: 1px solid rgba(255,255,255,0.06); 
-            position: relative; overflow: hidden;
+            background: #1a1a26; 
+            border-radius: 20px; padding: 16px; 
+            border: 1px solid rgba(255,255,255,0.04); 
             transition: all 0.3s;
         }
         .tournament-card:hover {
-            border-color: rgba(255,45,85,0.15);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(0,0,0,0.5);
-        }
-        .tournament-card::before { 
-            content: ''; position: absolute; top: 0; left: 0; 
-            width: 4px; height: 100%; 
-            background: linear-gradient(to bottom, #ff2d55, #ff6b35); 
-            border-radius: 24px 0 0 24px; 
+            border-color: rgba(255,255,255,0.08);
+            transform: translateY(-1px);
         }
 
-        /* Left image */
+        /* Left PUBG image */
         .tournament-image { 
-            width: 80px; height: 80px; min-width: 80px;
-            background: linear-gradient(135deg, #2a1a4a, #1a0f2e); 
-            border-radius: 20px; display: flex; flex-direction: column;
+            width: 82px; height: 82px; min-width: 82px;
+            background: linear-gradient(135deg, #1e0f3a, #2a1a4e); 
+            border-radius: 16px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; 
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 2px solid #c9a227;
             position: relative;
+            overflow: hidden;
         }
-        .tournament-image .game-icon {
-            font-size: 32px;
-            color: #ff8c00;
-            margin-bottom: 2px;
+        .tournament-image .pubg-frame {
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px solid #c9a227;
+            border-radius: 12px;
         }
-        .tournament-image .game-label {
+        .tournament-image .pubg-text {
             font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
+            font-size: 16px;
             font-weight: 900;
-            color: #ff8c00;
+            color: #c9a227;
             letter-spacing: 2px;
+            z-index: 1;
+            text-shadow: 0 0 10px rgba(201, 162, 39, 0.3);
+        }
+        .tournament-image .pubg-sub {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8px;
+            font-weight: 700;
+            color: #c9a227;
+            letter-spacing: 3px;
+            z-index: 1;
+            margin-top: 2px;
+            opacity: 0.9;
         }
 
         /* Right content */
         .tournament-content { 
-            flex: 1; display: flex; flex-direction: column; gap: 8px;
+            flex: 1; display: flex; flex-direction: column;
             min-width: 0;
         }
 
-        /* Meta top row */
+        /* Top meta row */
         .tournament-meta-top { 
-            display: flex; align-items: center; gap: 14px;
-            font-size: 12px; color: #888; font-family: 'Rajdhani', sans-serif;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 11px; color: #777; 
+            font-family: 'Rajdhani', sans-serif;
+            margin-bottom: 6px;
             flex-wrap: wrap;
         }
         .tournament-meta-top span { 
-            display: flex; align-items: center; gap: 5px; 
+            display: flex; align-items: center; gap: 4px; 
         }
-        .tournament-meta-top i { font-size: 11px; color: #ff2d55; }
+        .tournament-meta-top i { font-size: 10px; color: #ff2d55; }
 
         .status-badge-inline {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 9px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        .status-upcoming { background: rgba(0, 200, 83, 0.12); color: #00c853; border: 1px solid rgba(0, 200, 83, 0.25); }
-        .status-current { background: rgba(255, 140, 0, 0.12); color: #ff8c00; border: 1px solid rgba(255, 140, 0, 0.25); }
-        .status-past { background: rgba(107, 114, 128, 0.12); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.25); }
+        .status-upcoming { background: rgba(0, 200, 83, 0.12); color: #00c853; border: 1px solid rgba(0, 200, 83, 0.2); }
+        .status-current { background: rgba(255, 140, 0, 0.12); color: #ff8c00; border: 1px solid rgba(255, 140, 0, 0.2); }
+        .status-past { background: rgba(107, 114, 128, 0.12); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.2); }
 
-        /* Title */
-        .tournament-title { 
-            font-family: 'Orbitron', sans-serif; 
-            font-size: 15px; font-weight: 700; color: #fff; 
-            line-height: 1.4; letter-spacing: 0.5px;
-            margin: 2px 0;
-        }
-
-        /* Prize row */
-        .tournament-prize-row {
+        /* Title + Prize row */
+        .tournament-title-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin: 2px 0 4px;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+
+        .tournament-title { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 14px; font-weight: 700; color: #fff; 
+            line-height: 1.35; letter-spacing: 0.5px;
+            flex: 1;
         }
 
         .tournament-prize { 
             font-family: 'Orbitron', sans-serif; 
-            font-size: 24px; font-weight: 900; color: #0096ff; 
-            text-shadow: 0 0 15px rgba(0, 150, 255, 0.3);
-        }
-
-        .tournament-free-badge {
-            font-size: 11px;
-            font-weight: 700;
-            color: #00c853;
-            background: rgba(0, 200, 83, 0.1);
-            padding: 5px 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 200, 83, 0.2);
+            font-size: 20px; font-weight: 900; color: #00d4ff; 
+            text-shadow: 0 0 12px rgba(0, 212, 255, 0.25);
+            white-space: nowrap;
+            margin-top: 2px;
         }
 
         /* Button */
         .tournament-btn { 
-            width: 100%; padding: 16px; 
-            background: #fff; border: none; border-radius: 16px; 
+            width: 100%; padding: 14px; 
+            background: #fff; border: none; border-radius: 12px; 
             color: #000; font-family: 'Orbitron', sans-serif; 
-            font-weight: 800; font-size: 14px; text-align: center; 
+            font-weight: 800; font-size: 13px; text-align: center; 
             text-transform: uppercase; letter-spacing: 3px; 
-            cursor: pointer; transition: all 0.3s; 
+            cursor: pointer; transition: all 0.25s; 
             text-decoration: none; display: block;
-            margin-top: 4px;
+            margin-top: 10px;
         }
         .tournament-btn:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 25px rgba(255,255,255,0.15); 
+            transform: translateY(-1px); 
+            box-shadow: 0 6px 20px rgba(255,255,255,0.1); 
         }
         .tournament-btn:disabled { 
-            background: #3a3a4a; color: #777; 
+            background: #333; color: #777; 
             cursor: not-allowed; transform: none; box-shadow: none; 
         }
         .tournament-btn.free-btn {
             background: linear-gradient(135deg, #00c853, #00a844);
             color: white;
-            box-shadow: 0 8px 25px rgba(0,200,83,0.3);
-        }
-        .tournament-btn.free-btn:hover {
-            box-shadow: 0 10px 30px rgba(0,200,83,0.4);
         }
 
         .empty-state { text-align: center; padding: 60px 20px; }
@@ -241,90 +266,82 @@
         <div class="particle"></div>
     </div>
 
-    <div class="container main-content">
-        <!-- Header -->
-        <div class="page-header">
-            <h1>TURNIRLER</h1>
-            <div class="header-actions">
-                <a href="/profil" class="header-btn"><i class="fas fa-user"></i></a>
-            </div>
+    <!-- Header -->
+    <div class="page-header">
+        <h1>TURNIRLER</h1>
+        <div class="header-actions">
+            <a href="/profil" class="header-btn"><i class="fas fa-user"></i></a>
         </div>
+    </div>
 
-        <!-- Mode Filter -->
-        <div class="mode-filter">
-            <button class="mode-btn active" onclick="filterMode('all', this)" type="button">
-                <i class="fas fa-th"></i> Hemme
-            </button>
-            <button class="mode-btn" onclick="filterMode('solo', this)" type="button">
-                <i class="fas fa-user"></i> Solo
-            </button>
-            <button class="mode-btn" onclick="filterMode('duo', this)" type="button">
-                <i class="fas fa-user-friends"></i> Duo
-            </button>
-            <button class="mode-btn" onclick="filterMode('squad', this)" type="button">
-                <i class="fas fa-users"></i> Squad
-            </button>
-        </div>
+    <!-- Mode Filter -->
+    <div class="mode-filter">
+        <button class="mode-btn active" onclick="filterMode('all', this)" type="button">
+            Hemme <span class="radio-circle"></span>
+        </button>
+        <button class="mode-btn" onclick="filterMode('solo', this)" type="button">
+            Solo <span class="radio-circle"></span>
+        </button>
+        <button class="mode-btn" onclick="filterMode('duo', this)" type="button">
+            Duo <span class="radio-circle"></span>
+        </button>
+        <button class="mode-btn" onclick="filterMode('squad', this)" type="button">
+            Squad <span class="radio-circle"></span>
+        </button>
+    </div>
 
-        <!-- Tournament List -->
-        <div class="tournament-list" id="tournament-list">
-            {% if turnirler %}
-                {% for t in turnirler %}
-                <div class="tournament-card" data-mode="{{ t.mode }}" data-status="{{ t.status }}">
-                    <!-- Left Image -->
-                    <div class="tournament-image">
-                        <i class="fas fa-gamepad game-icon"></i>
-                        <span class="game-label">PUBG</span>
+    <!-- Tournament List -->
+    <div class="tournament-list" id="tournament-list">
+        {% if turnirler %}
+            {% for t in turnirler %}
+            <div class="tournament-card" data-mode="{{ t.mode }}" data-status="{{ t.status }}">
+                <!-- Left PUBG Logo -->
+                <div class="tournament-image">
+                    <div class="pubg-frame"></div>
+                    <span class="pubg-text">PUBG</span>
+                    <span class="pubg-sub">MOBILE</span>
+                </div>
+
+                <!-- Right Content -->
+                <div class="tournament-content">
+                    <!-- Meta top -->
+                    <div class="tournament-meta-top">
+                        <span><i class="fas fa-calendar"></i> {{ t.senesi }} {{ t.wagty }}</span>
+                        <span><i class="fas fa-users"></i> {{ t.onaylanan }}/{{ t.yer_sany }}</span>
+                        <span><i class="fas fa-gamepad"></i> {{ t.gatnasym }}</span>
+                        <span class="status-badge-inline status-{{ t.status }}">{{ t.status }}</span>
                     </div>
 
-                    <!-- Right Content -->
-                    <div class="tournament-content">
-                        <!-- Meta top -->
-                        <div class="tournament-meta-top">
-                            <span><i class="fas fa-calendar"></i> {{ t.senesi }} {{ t.wagty }}</span>
-                            <span><i class="fas fa-users"></i> {{ t.onaylanan }}/{{ t.yer_sany }}</span>
-                            <span><i class="fas fa-gamepad"></i> {{ t.mode|upper }}</span>
-                            <span class="status-badge-inline status-{{ t.status }}">{{ t.status }}</span>
-                        </div>
-
-                        <!-- Title -->
+                    <!-- Title + Prize -->
+                    <div class="tournament-title-row">
                         <div class="tournament-title">{{ t.ad }}</div>
-
-                        <!-- Prize row -->
-                        <div class="tournament-prize-row">
-                            {% if t.tolekli == 0 %}
-                                <span class="tournament-free-badge">TÖLEGSIZ</span>
-                            {% else %}
-                                <span style="font-size: 12px; color: #666;">{{ t.tolek }}</span>
-                            {% endif %}
-                            <div class="tournament-prize">{{ t.bayrak_jemi }}</div>
-                        </div>
-
-                        <!-- Button -->
-                        {% if t.onaylanan >= t.yer_sany %}
-                            <button class="tournament-btn" type="button" disabled>
-                                <i class="fas fa-lock"></i> YERLER DOLDY
-                            </button>
-                        {% elif t.tolekli == 0 %}
-                            <button class="tournament-btn free-btn" onclick="joinTournament({{ t.id }})" type="button">
-                                <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
-                            </button>
-                        {% else %}
-                            <button class="tournament-btn" onclick="joinTournament({{ t.id }})" type="button">
-                                <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
-                            </button>
-                        {% endif %}
+                        <div class="tournament-prize">{{ t.bayrak_jemi }}</div>
                     </div>
+
+                    <!-- Button -->
+                    {% if t.onaylanan >= t.yer_sany %}
+                        <button class="tournament-btn" type="button" disabled>
+                            <i class="fas fa-lock"></i> YERLER DOLDY
+                        </button>
+                    {% elif t.tolekli == 0 %}
+                        <button class="tournament-btn free-btn" onclick="joinTournament({{ t.id }})" type="button">
+                            <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
+                        </button>
+                    {% else %}
+                        <button class="tournament-btn" onclick="joinTournament({{ t.id }})" type="button">
+                            <i class="fas fa-plus-circle"></i> TURNIRA GOŞUL
+                        </button>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-calendar-times"></i>
-                    <h3>Turnir Ýok</h3>
-                    <p>Häzirki wagtda elýeterli turnir ýok.</p>
-                </div>
-            {% endif %}
-        </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h3>Turnir Ýok</h3>
+                <p>Häzirki wagtda elýeterli turnir ýok.</p>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Bottom Navigation -->

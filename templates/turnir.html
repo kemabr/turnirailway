@@ -68,7 +68,7 @@
             text-decoration: none;
         }
 
-        /* Mode filter */
+        /* Mode filter - radio style */
         .mode-filter { 
             display: flex; gap: 10px; margin-bottom: 20px; 
             overflow-x: auto; padding: 0 16px 4px; scrollbar-width: none;
@@ -83,19 +83,20 @@
             border: 1.5px solid rgba(255,255,255,0.15); border-radius: 25px; 
             color: rgba(255,255,255,0.6); font-family: 'Rajdhani', sans-serif; 
             font-weight: 700; font-size: 14px; cursor: pointer; 
-            transition: all 0.3s; display: flex; align-items: center; gap: 8px; 
+            transition: all 0.3s; display: flex; align-items: center; gap: 10px; 
             white-space: nowrap;
         }
-        .mode-btn .radio-circle {
-            width: 14px; height: 14px;
+        .mode-btn .radio-dot {
+            width: 16px; height: 16px;
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.3s;
+            flex-shrink: 0;
         }
-        .mode-btn .radio-circle::after {
+        .mode-btn .radio-dot::after {
             content: '';
-            width: 6px; height: 6px;
+            width: 8px; height: 8px;
             background: transparent;
             border-radius: 50%;
             transition: all 0.3s;
@@ -104,10 +105,10 @@
             border-color: #0096ff; color: #0096ff; 
             background: rgba(0, 150, 255, 0.08); 
         }
-        .mode-btn.active .radio-circle {
+        .mode-btn.active .radio-dot {
             border-color: #0096ff;
         }
-        .mode-btn.active .radio-circle::after {
+        .mode-btn.active .radio-dot::after {
             background: #0096ff;
         }
 
@@ -122,7 +123,7 @@
 
         /* Tournament card */
         .tournament-card { 
-            display: flex; gap: 16px;
+            display: flex; gap: 14px;
             background: #1a1a26; 
             border-radius: 20px; padding: 16px; 
             border: 1px solid rgba(255,255,255,0.04); 
@@ -135,7 +136,7 @@
 
         /* Left PUBG image */
         .tournament-image { 
-            width: 82px; height: 82px; min-width: 82px;
+            width: 78px; height: 78px; min-width: 78px;
             background: linear-gradient(135deg, #1e0f3a, #2a1a4e); 
             border-radius: 16px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; 
@@ -143,15 +144,17 @@
             position: relative;
             overflow: hidden;
         }
-        .tournament-image .pubg-frame {
+        .tournament-image::before {
+            content: '';
             position: absolute;
-            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
             border: 1px solid #c9a227;
             border-radius: 12px;
+            pointer-events: none;
         }
         .tournament-image .pubg-text {
             font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             color: #c9a227;
             letter-spacing: 2px;
@@ -160,12 +163,12 @@
         }
         .tournament-image .pubg-sub {
             font-family: 'Orbitron', sans-serif;
-            font-size: 8px;
+            font-size: 7px;
             font-weight: 700;
             color: #c9a227;
             letter-spacing: 3px;
             z-index: 1;
-            margin-top: 2px;
+            margin-top: 1px;
             opacity: 0.9;
         }
 
@@ -180,7 +183,7 @@
             display: flex; align-items: center; gap: 12px;
             font-size: 11px; color: #777; 
             font-family: 'Rajdhani', sans-serif;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             flex-wrap: wrap;
         }
         .tournament-meta-top span { 
@@ -209,34 +212,33 @@
             justify-content: space-between;
             align-items: flex-start;
             gap: 12px;
-            margin-bottom: 4px;
+            margin-bottom: 10px;
         }
 
         .tournament-title { 
             font-family: 'Orbitron', sans-serif; 
-            font-size: 14px; font-weight: 700; color: #fff; 
-            line-height: 1.35; letter-spacing: 0.5px;
+            font-size: 13px; font-weight: 700; color: #fff; 
+            line-height: 1.4; letter-spacing: 0.5px;
             flex: 1;
         }
 
         .tournament-prize { 
             font-family: 'Orbitron', sans-serif; 
-            font-size: 20px; font-weight: 900; color: #00d4ff; 
+            font-size: 18px; font-weight: 900; color: #00d4ff; 
             text-shadow: 0 0 12px rgba(0, 212, 255, 0.25);
             white-space: nowrap;
             margin-top: 2px;
         }
 
-        /* Button */
+        /* Button - compact */
         .tournament-btn { 
-            width: 100%; padding: 14px; 
+            width: 100%; padding: 12px; 
             background: #fff; border: none; border-radius: 12px; 
             color: #000; font-family: 'Orbitron', sans-serif; 
-            font-weight: 800; font-size: 13px; text-align: center; 
+            font-weight: 800; font-size: 12px; text-align: center; 
             text-transform: uppercase; letter-spacing: 3px; 
             cursor: pointer; transition: all 0.25s; 
             text-decoration: none; display: block;
-            margin-top: 10px;
         }
         .tournament-btn:hover { 
             transform: translateY(-1px); 
@@ -277,16 +279,16 @@
     <!-- Mode Filter -->
     <div class="mode-filter">
         <button class="mode-btn active" onclick="filterMode('all', this)" type="button">
-            Hemme <span class="radio-circle"></span>
+            Hemme <span class="radio-dot"></span>
         </button>
         <button class="mode-btn" onclick="filterMode('solo', this)" type="button">
-            Solo <span class="radio-circle"></span>
+            Solo <span class="radio-dot"></span>
         </button>
         <button class="mode-btn" onclick="filterMode('duo', this)" type="button">
-            Duo <span class="radio-circle"></span>
+            Duo <span class="radio-dot"></span>
         </button>
         <button class="mode-btn" onclick="filterMode('squad', this)" type="button">
-            Squad <span class="radio-circle"></span>
+            Squad <span class="radio-dot"></span>
         </button>
     </div>
 
@@ -297,7 +299,6 @@
             <div class="tournament-card" data-mode="{{ t.mode }}" data-status="{{ t.status }}">
                 <!-- Left PUBG Logo -->
                 <div class="tournament-image">
-                    <div class="pubg-frame"></div>
                     <span class="pubg-text">PUBG</span>
                     <span class="pubg-sub">MOBILE</span>
                 </div>
